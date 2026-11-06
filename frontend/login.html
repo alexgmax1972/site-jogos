@@ -1,0 +1,413 @@
+﻿
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Site de Jogos</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background: radial-gradient(circle at top, #182848 0%, #0b1020 45%, #050711 100%);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 460px;
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.55),
+                        0 0 35px rgba(37, 99, 235, 0.12);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 34px;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 27px;
+            margin-bottom: 8px;
+        }
+
+        .subtitulo {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cbd5e1;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        }
+
+        .lembrar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: -5px;
+            margin-bottom: 22px;
+        }
+
+        .lembrar label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            font-weight: normal;
+            color: #94a3b8;
+        }
+
+        .lembrar input {
+            width: auto;
+            margin: 0;
+        }
+
+        .esqueci {
+            color: #60a5fa;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .esqueci:hover {
+            text-decoration: underline;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.35);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: wait;
+            transform: none;
+        }
+
+        .mensagem {
+            display: none;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .mensagem.erro {
+            display: block;
+            background: rgba(127, 29, 29, 0.3);
+            border: 1px solid #ef4444;
+            color: #fecaca;
+        }
+
+        .mensagem.sucesso {
+            display: block;
+            background: rgba(20, 83, 45, 0.3);
+            border: 1px solid #22c55e;
+            color: #bbf7d0;
+        }
+
+        .cadastro {
+            text-align: center;
+            color: #94a3b8;
+            margin-top: 25px;
+            line-height: 1.6;
+        }
+
+        .cadastro a {
+            color: #60a5fa;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .cadastro a:hover {
+            text-decoration: underline;
+        }
+
+        .voltar {
+            display: block;
+            text-align: center;
+            margin-top: 25px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .voltar:hover {
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <div class="logo">🎮</div>
+
+        <h1>SITE DE JOGOS</h1>
+
+        <p class="subtitulo">
+            Entre para continuar sua aventura
+        </p>
+
+        <div id="mensagem" class="mensagem" role="alert"></div>
+
+        <form id="formLogin">
+
+            <label for="email">📧 E-mail</label>
+
+            <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Digite seu e-mail"
+                autocomplete="email"
+                required
+            >
+
+            <label for="senha">🔒 Senha</label>
+
+            <input
+                type="password"
+                id="senha"
+                name="senha"
+                placeholder="Digite sua senha"
+                autocomplete="current-password"
+                required
+            >
+
+            <div class="lembrar">
+
+                <label>
+                    <input type="checkbox" id="lembrar">
+                    Lembrar de mim
+                </label>
+
+                <a href="#" class="esqueci" id="linkEsqueci">
+                    Esqueci a senha
+                </a>
+
+            </div>
+
+            <button type="submit" id="botaoEntrar">
+                🚀 ENTRAR
+            </button>
+
+        </form>
+
+        <div class="cadastro">
+            Ainda não possui uma conta?
+            <br>
+            <a href="cadastro.html">Criar cadastro</a>
+        </div>
+
+        <a href="index.html" class="voltar">
+            ← Voltar para o início
+        </a>
+
+    </main>
+
+    <script>
+        const API_AUTH = "http://127.0.0.1:5000/api/auth";
+
+        const formLogin = document.getElementById("formLogin");
+        const mensagem = document.getElementById("mensagem");
+        const botaoEntrar = document.getElementById("botaoEntrar");
+
+        function mostrarMensagem(texto, tipo) {
+            mensagem.textContent = texto;
+            mensagem.className = "mensagem " + tipo;
+        }
+
+        function esconderMensagem() {
+            mensagem.textContent = "";
+            mensagem.className = "mensagem";
+        }
+
+        // Impede redirecionamentos para endereços externos.
+        function obterDestinoSeguro() {
+            const parametros = new URLSearchParams(
+                window.location.search
+            );
+
+            const destino = parametros.get("redirect");
+
+            if (!destino) {
+                return "jogos.html";
+            }
+
+            // Aceita somente nomes de páginas locais.
+            if (
+                destino.includes("://") ||
+                destino.startsWith("//") ||
+                destino.includes("/") ||
+                destino.includes("\\")
+            ) {
+                return "jogos.html";
+            }
+
+            return destino;
+        }
+
+        formLogin.addEventListener("submit", async function(evento) {
+
+            evento.preventDefault();
+            esconderMensagem();
+
+            const email = document.getElementById("email").value.trim();
+            const senha = document.getElementById("senha").value;
+
+            if (!email || !senha) {
+                mostrarMensagem(
+                    "Preencha o e-mail e a senha.",
+                    "erro"
+                );
+                return;
+            }
+
+            botaoEntrar.disabled = true;
+            botaoEntrar.textContent = "⏳ ENTRANDO...";
+
+            try {
+
+                const resposta = await fetch(
+                    `${API_AUTH}/login`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        credentials: "include",
+                        body: JSON.stringify({
+                            email: email,
+                            senha: senha
+                        })
+                    }
+                );
+
+                const dados = await resposta.json();
+
+                if (!resposta.ok || dados.sucesso !== true) {
+
+                    mostrarMensagem(
+                        dados.mensagem || "E-mail ou senha incorretos.",
+                        "erro"
+                    );
+
+                    return;
+                }
+
+                mostrarMensagem(
+                    "Login realizado com sucesso! Bem-vindo ao Site de Jogos.",
+                    "sucesso"
+                );
+
+                // Confirma que a sessão foi criada.
+                const verificacao = await fetch(
+                    `${API_AUTH}/verificar`,
+                    {
+                        method: "GET",
+                        credentials: "include"
+                    }
+                );
+
+                const sessao = await verificacao.json();
+
+                if (!verificacao.ok || sessao.logado !== true) {
+                    mostrarMensagem(
+                        "Login aceito, mas não foi possível confirmar a sessão. Verifique a configuração do Flask.",
+                        "erro"
+                    );
+                    return;
+                }
+
+                setTimeout(function() {
+                    window.location.href = obterDestinoSeguro();
+                }, 800);
+
+            } catch (erro) {
+
+                console.error("Erro no login:", erro);
+
+                mostrarMensagem(
+                    "Não foi possível conectar ao servidor. Verifique se o Flask está funcionando em http://127.0.0.1:5000.",
+                    "erro"
+                );
+
+            } finally {
+
+                botaoEntrar.disabled = false;
+                botaoEntrar.textContent = "🚀 ENTRAR";
+
+            }
+
+        });
+
+        document.getElementById("linkEsqueci").addEventListener(
+            "click",
+            function(evento) {
+                evento.preventDefault();
+
+                mostrarMensagem(
+                    "A recuperação de senha ainda não está configurada.",
+                    "erro"
+                );
+            }
+        );
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,245 @@
+﻿
+/* ========================================
+   CONFIGURAÇÕES GERAIS
+======================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #0b1020;
+    color: #ffffff;
+    min-height: 100vh;
+}
+
+/* ========================================
+   CABEÇALHO E MENU
+======================================== */
+
+.cabecalho {
+    width: 100%;
+    padding: 20px 60px;
+    background: #11182d;
+    border-bottom: 1px solid #273252;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #00d9ff;
+}
+
+.menu {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.menu a {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.menu a:hover {
+    color: #00d9ff;
+}
+
+/* ========================================
+   ÁREA DO VISITANTE E USUÁRIO LOGADO
+======================================== */
+
+#areaUsuario {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+#areaVisitante {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* BOTÃO SAIR */
+
+.botao-sair {
+    padding: 9px 15px;
+    border: none;
+    border-radius: 8px;
+    background: #dc3545;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.botao-sair:hover {
+    background: #a71d2a;
+    transform: translateY(-2px);
+}
+
+/* ========================================
+   BANNER PRINCIPAL
+======================================== */
+
+.hero {
+    min-height: 430px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #111a38, #172554);
+}
+
+.hero h1 {
+    font-size: 52px;
+    margin-bottom: 20px;
+}
+
+.hero p {
+    font-size: 20px;
+    color: #cbd5e1;
+    margin-bottom: 30px;
+}
+
+/* ========================================
+   BOTÕES
+======================================== */
+
+.botao {
+    display: inline-block;
+    padding: 15px 30px;
+    background: #00d9ff;
+    color: #07101f;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.botao:hover {
+    transform: scale(1.05);
+    background: #ffffff;
+}
+
+/* ========================================
+   SEÇÃO DE JOGOS
+======================================== */
+
+.jogos-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 20px;
+}
+
+.jogos-section h2 {
+    font-size: 32px;
+    margin-bottom: 30px;
+}
+
+.lista-jogos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 25px;
+}
+
+/* ========================================
+   CARTÕES DOS JOGOS
+======================================== */
+
+.card-jogo {
+    background: #151e35;
+    border: 1px solid #293653;
+    border-radius: 15px;
+    padding: 25px;
+    transition: 0.3s;
+}
+
+.card-jogo:hover {
+    transform: translateY(-6px);
+    border-color: #00d9ff;
+}
+
+.card-jogo h3 {
+    font-size: 23px;
+    margin-bottom: 12px;
+}
+
+.card-jogo p {
+    color: #cbd5e1;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.categoria {
+    display: inline-block;
+    padding: 6px 12px;
+    background: #24304f;
+    color: #00d9ff;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* ========================================
+   RODAPÉ
+======================================== */
+
+footer {
+    text-align: center;
+    padding: 25px;
+    background: #11182d;
+    border-top: 1px solid #273252;
+    color: #94a3b8;
+}
+
+/* ========================================
+   RESPONSIVIDADE PARA CELULARES
+======================================== */
+
+@media (max-width: 768px) {
+
+    .cabecalho {
+        padding: 20px;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .menu {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    #areaUsuario,
+    #areaVisitante {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .hero h1 {
+        font-size: 36px;
+    }
+
+    .hero p {
+        font-size: 17px;
+    }
+
+    .jogos-section h2 {
+        font-size: 26px;
+    }
+}

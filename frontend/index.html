@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Site de Jogos | RPG Reinos em Guerra</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        :root {
+            --ouro: #f5c451;
+            --ouro2: #d99b27;
+            --azul: #00d9ff;
+            --borda: #293653;
+            --sec: #9baac2;
+            --tx: #eef3ff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            color: var(--tx);
+            font-family: Georgia, "Palatino Linotype", serif;
+            background: radial-gradient(ellipse at top, #1b2c50, #080d1b 65%) fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* fundo cinematográfico: a própria imagem, desfocada e escurecida */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: -30px;
+            z-index: -1;
+            background: url("img/reinos-em-guerra.png") center / cover;
+            filter: blur(18px) brightness(.38) saturate(1.3);
+        }
+
+        main { flex: 1; }
+
+        /* CABEÇALHO */
+        body .cabecalho {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 8px 28px;
+            background: #060b18cc;
+            border-bottom: 1px solid var(--ouro);
+            box-shadow: 0 4px 24px #0008;
+            backdrop-filter: blur(6px);
+        }
+
+        .logo { display: block; text-decoration: none; }
+
+        /* logo (coroa) recortado da imagem */
+        .logo-img {
+            display: block;
+            width: 230px;
+            height: 63.5px;
+            background: url("img/reinos-em-guerra.png") no-repeat;
+            background-size: 929.7px 619.8px;
+            background-position: -12.1px -3px;
+        }
+
+        body .menu {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+
+        body .menu a {
+            color: var(--tx);
+            text-decoration: none;
+            font-size: 15px;
+            transition: .2s;
+        }
+
+        body .menu a:hover { color: var(--ouro); text-shadow: 0 0 10px #f5c45188; }
+
+        #areaVisitante, #areaUsuario { display: inline-flex; align-items: center; gap: 18px; }
+        #areaUsuario[style*="display: none"], #areaVisitante[style*="display: none"] { display: none !important; }
+
+        .botao-sair {
+            background: #1e2b45;
+            color: #fff;
+            border: 1px solid #34445f;
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .botao-sair:hover { background: #293b5e; }
+
+        /* TÍTULO NO TOPO */
+        .titulo-topo { padding: 34px 20px 0; text-align: center; }
+
+        .titulo-topo h1 {
+            margin: 0;
+            font-size: clamp(30px, 5vw, 50px);
+            color: var(--ouro);
+            text-shadow: 0 0 22px #f5c45166;
+            letter-spacing: 1px;
+        }
+
+        /* BANNER NO TOPO */
+        .banner {
+            max-width: 1250px;
+            margin: 24px auto 0;
+            padding: 0 20px;
+        }
+
+        .banner img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border: 2px solid var(--ouro);
+            border-radius: 20px;
+            box-shadow: 0 0 40px #f5c45140, 0 20px 60px #0009;
+        }
+
+        /* HERO */
+        body .hero {
+            max-width: 1250px;
+            margin: 30px auto 50px;
+            padding: 46px 28px 40px;
+            text-align: center;
+            background: linear-gradient(145deg, #151f38ee, #0a1226ee);
+            border: 1px solid #f5c45155;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px #0008;
+        }
+
+        .hero-selo {
+            display: inline-block;
+            padding: 6px 16px;
+            margin-bottom: 14px;
+            border: 1px solid var(--ouro);
+            border-radius: 30px;
+            background: #f5c45118;
+            color: var(--ouro);
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+
+        body .hero p { color: var(--tx); font-size: 18px; margin: 0; }
+
+        .heroi:focus-visible, body .menu a:focus-visible {
+            outline: 3px solid var(--azul);
+            outline-offset: 3px;
+        }
+
+        /* FAIXA DOS HERÓIS */
+        .herois {
+            display: grid;
+            grid-template-columns: repeat(10, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 34px;
+        }
+
+        .heroi {
+            display: block;
+            text-decoration: none;
+            background: #0b1428;
+            border: 2px solid var(--borda);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: .2s;
+        }
+
+        .heroi:hover { transform: translateY(-5px); border-color: var(--ouro); box-shadow: 0 0 22px #f5c45155; }
+
+        .heroi img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+
+        .heroi span { display: block; padding: 6px 2px; color: var(--ouro); font-size: 12px; font-weight: bold; }
+
+
+        /* RODAPÉ */
+        footer { text-align: center; padding: 22px; color: var(--sec); font-size: 13px; background: #060b18cc; border-top: 1px solid var(--borda); }
+        footer p { margin: 0; }
+
+        @media (max-width: 1000px) { .herois { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+        @media (max-width: 600px) {
+            .titulo-topo { padding-top: 22px; }
+            .banner { padding: 0 12px; margin-top: 16px; }
+            body .cabecalho { padding: 8px 12px; justify-content: center; }
+            body .hero { margin: 20px 12px 30px; padding: 30px 16px; }
+            .herois { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+    </style>
+</head>
+
+<body>
+
+    <!-- CABEÇALHO -->
+    <header class="cabecalho">
+
+        <a href="index.html" class="logo" aria-label="RPG Reinos em Guerra — Início">
+            <span class="logo-img" role="img" aria-label="RPG Reinos em Guerra"></span>
+        </a>
+
+        <nav class="menu" id="menuPrincipal">
+
+            <a href="index.html">🏠 Início</a>
+
+            <a href="ranking.html">🏆 Ranking</a>
+
+            <span id="areaVisitante">
+                <a href="login.html">👤 Login</a>
+                <a href="cadastro.html">📝 Cadastro</a>
+            </span>
+
+            <span id="areaUsuario" style="display: none;">
+                <span id="nomeUsuario">Carregando...</span>
+
+                <button
+                    type="button"
+                    onclick="sair()"
+                    class="botao-sair"
+                >
+                    🚪 Sair
+                </button>
+            </span>
+
+        </nav>
+
+    </header>
+
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main>
+
+        <!-- TÍTULO NO TOPO -->
+        <section class="titulo-topo">
+            <h1>Bem-vindo ao Site de Jogos</h1>
+        </section>
+
+        <!-- BANNER -->
+        <section class="banner">
+            <img src="img/banner-reinos.jpg" alt="Os heróis dos Reinos em Guerra diante do castelo e dos dragões">
+        </section>
+
+        <!-- APRESENTAÇÃO -->
+        <section class="hero">
+
+            <span class="hero-selo">👑 RPG REINOS EM GUERRA</span>
+
+            <p>
+                Jogue, conquiste pontos, suba no ranking
+                e divirta-se! Crie seu herói e conquiste os reinos!
+            </p>
+
+            <!-- 10 CLASSES -->
+            <div class="herois" aria-label="Classes do RPG">
+                <a class="heroi" href="selecionar-personagem.html"><img src="img/classes/guerreiro.png" alt="" loading="lazy"><span>Guerreiro</span></a>
+                <a class="heroi" href="selecionar-personagem.html"><img src="img/classes/mago.png" alt="" loading="lazy"><span>Mago</span></a>
+                <a class="heroi" href="selecionar-personagem.html"><img src="img/classes/arqueiro.png" alt="" loading="lazy"><span>Arqueiro</span></a>
+                <a class="heroi" href="selecionar-personagem.html"><img src="img/classes/paladino.png" alt="" loading="lazy"><span>Paladino</span></a>
+                <a class="heroi" href="selecionar-personagem.html"><img src="img/classes/assassino.png" alt="" loading="lazy"><span>Assassino</span></a>
+                <a class="heroi" href="selecionar-personagem.html"><img src="img/classes/druida.png" alt="" loading="lazy"><span>Druida</span></a>
+                <a class="heroi" href="selecionar-personagem.html"><img src="img/classes/necromante.png" alt="" loading="lazy"><span>Necromante</span></a>
+                <a class="heroi" href="selecionar-personagem.html"><img src="img/classes/barbaro.png" alt="" loading="lazy"><span>Bárbaro</span></a>
+                <a class="heroi" href="selecionar-personagem.html"><img src="img/classes/monge.png" alt="" loading="lazy"><span>Monge</span></a>
+                <a class="heroi" href="selecionar-personagem.html"><img src="img/classes/cavaleiro.png" alt="" loading="lazy"><span>Cavaleiro</span></a>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- RODAPÉ -->
+    <footer>
+
+        <p>
+            © 2026 Site de Jogos — Todos os direitos reservados.
+        </p>
+
+    </footer>
+
+    <!-- AUTENTICAÇÃO -->
+    <script src="js/auth.js"></script>
+
+    <!-- MENU DO USUÁRIO -->
+    <script src="js/menu.js"></script>
+
+</body>
+
+</html>

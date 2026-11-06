@@ -1,0 +1,426 @@
+﻿
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Site de Jogos</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(circle at top, #25345c 0%, #101525 45%, #070a12 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 460px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .logo-icon {
+            font-size: 55px;
+            margin-bottom: 8px;
+        }
+
+        .logo h1 {
+            font-size: 30px;
+            letter-spacing: 2px;
+        }
+
+        .logo p {
+            color: #9ca8c7;
+            margin-top: 7px;
+        }
+
+        .card {
+            background: rgba(18, 24, 40, 0.96);
+            border: 1px solid #303b59;
+            border-radius: 18px;
+            padding: 35px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+        }
+
+        .card h2 {
+            text-align: center;
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .subtitulo {
+            text-align: center;
+            color: #9ca8c7;
+            margin-bottom: 28px;
+        }
+
+        .campo {
+            margin-bottom: 18px;
+        }
+
+        .campo label {
+            display: block;
+            margin-bottom: 8px;
+            color: #dce3f5;
+            font-weight: bold;
+        }
+
+        .campo input {
+            width: 100%;
+            padding: 14px 15px;
+            border-radius: 10px;
+            border: 1px solid #3b4766;
+            background: #0c1120;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .campo input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+
+        .senha-info {
+            color: #7f8baa;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .termos {
+            display: flex;
+            gap: 9px;
+            align-items: flex-start;
+            color: #aeb8d0;
+            font-size: 14px;
+            line-height: 1.4;
+            margin: 8px 0 22px;
+        }
+
+        .termos input {
+            margin-top: 3px;
+            accent-color: #667eea;
+        }
+
+        .termos a {
+            color: #8295ff;
+            text-decoration: none;
+        }
+
+        .termos a:hover {
+            text-decoration: underline;
+        }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 17px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login {
+            text-align: center;
+            margin-top: 25px;
+            color: #9ca8c7;
+        }
+
+        .login a {
+            color: #8295ff;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .login a:hover {
+            text-decoration: underline;
+        }
+
+        .voltar {
+            display: block;
+            text-align: center;
+            margin-top: 22px;
+            color: #9ca8c7;
+            text-decoration: none;
+        }
+
+        .voltar:hover {
+            color: white;
+        }
+
+        .mensagem {
+            display: none;
+            margin-bottom: 18px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .erro {
+            background: #3a1820;
+            border: 1px solid #8c3c4d;
+            color: #ffb9c4;
+        }
+
+        .sucesso {
+            background: #173522;
+            border: 1px solid #39734d;
+            color: #b9f3c9;
+        }
+
+        @media (max-width: 500px) {
+            .card {
+                padding: 25px 20px;
+            }
+
+            .logo h1 {
+                font-size: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="logo">
+            <div class="logo-icon">🎮</div>
+            <h1>SITE DE JOGOS</h1>
+            <p>Crie sua conta e comece a jogar</p>
+        </div>
+
+        <div class="card">
+
+            <h2>📝 Cadastro</h2>
+            <p class="subtitulo">Crie sua conta gratuitamente</p>
+
+            <div id="mensagem" class="mensagem" role="alert"></div>
+
+            <form id="formCadastro">
+
+                <div class="campo">
+                    <label for="nome">👤 Nome</label>
+                    <input
+                        type="text"
+                        id="nome"
+                        name="nome"
+                        placeholder="Digite seu nome"
+                        minlength="3"
+                        required
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="email">📧 E-mail</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="Digite seu e-mail"
+                        required
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="senha">🔒 Senha</label>
+                    <input
+                        type="password"
+                        id="senha"
+                        name="senha"
+                        placeholder="Crie uma senha"
+                        minlength="6"
+                        required
+                    >
+                    <div class="senha-info">
+                        A senha deve possuir pelo menos 6 caracteres.
+                    </div>
+                </div>
+
+                <div class="campo">
+                    <label for="confirmarSenha">🔐 Confirmar senha</label>
+                    <input
+                        type="password"
+                        id="confirmarSenha"
+                        name="confirmarSenha"
+                        placeholder="Digite a senha novamente"
+                        minlength="6"
+                        required
+                    >
+                </div>
+
+                <label class="termos">
+                    <input type="checkbox" id="termos" required>
+                    <span>
+                        Aceito os termos de uso e as regras do
+                        <a href="#">Site de Jogos</a>.
+                    </span>
+                </label>
+
+                <button type="submit" class="btn" id="btnCadastro">
+                    🎮 CRIAR CONTA
+                </button>
+
+            </form>
+
+            <div class="login">
+                Já possui uma conta?
+                <a href="login.html">Fazer login</a>
+            </div>
+
+        </div>
+
+        <a href="index.html" class="voltar">
+            ← Voltar para o início
+        </a>
+
+    </div>
+
+    <script>
+        // Endereço do backend Flask
+        const API_CADASTRO = "http://127.0.0.1:5000/api/auth/cadastro";
+
+        const formulario = document.getElementById("formCadastro");
+        const mensagem = document.getElementById("mensagem");
+        const botao = document.getElementById("btnCadastro");
+
+        function mostrarMensagem(texto, tipo) {
+            mensagem.style.display = "block";
+            mensagem.className = "mensagem " + tipo;
+            mensagem.textContent = texto;
+        }
+
+        formulario.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const nome = document.getElementById("nome").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const senha = document.getElementById("senha").value;
+            const confirmarSenha = document.getElementById("confirmarSenha").value;
+            const aceitouTermos = document.getElementById("termos").checked;
+
+            mensagem.style.display = "none";
+
+            // Validação dos campos
+            if (nome.length < 3) {
+                mostrarMensagem(
+                    "O nome deve possuir pelo menos 3 caracteres.",
+                    "erro"
+                );
+                return;
+            }
+
+            if (senha.length < 6) {
+                mostrarMensagem(
+                    "A senha deve possuir pelo menos 6 caracteres.",
+                    "erro"
+                );
+                return;
+            }
+
+            if (senha !== confirmarSenha) {
+                mostrarMensagem(
+                    "As senhas não são iguais.",
+                    "erro"
+                );
+                return;
+            }
+
+            if (!aceitouTermos) {
+                mostrarMensagem(
+                    "Você precisa aceitar os termos de uso.",
+                    "erro"
+                );
+                return;
+            }
+
+            // Evita vários envios ao mesmo tempo
+            botao.disabled = true;
+            botao.textContent = "AGUARDE...";
+
+            try {
+                // Envia os dados verdadeiros para o Flask
+                const resposta = await fetch(API_CADASTRO, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        nome: nome,
+                        email: email,
+                        senha: senha
+                    })
+                });
+
+                const dados = await resposta.json();
+
+                if (!resposta.ok || !dados.sucesso) {
+                    mostrarMensagem(
+                        dados.mensagem || "Não foi possível realizar o cadastro.",
+                        "erro"
+                    );
+                    return;
+                }
+
+                mostrarMensagem(
+                    "Cadastro realizado com sucesso! Seus dados foram enviados ao banco de dados.",
+                    "sucesso"
+                );
+
+                formulario.reset();
+
+                // Aguarda um pouco e segue para a página inicial
+                setTimeout(function() {
+                    window.location.href = "index.html";
+                }, 1800);
+
+            } catch (erro) {
+                console.error("Erro no cadastro:", erro);
+
+                mostrarMensagem(
+                    "Não foi possível conectar ao servidor. Verifique se o backend Flask está funcionando.",
+                    "erro"
+                );
+
+            } finally {
+                botao.disabled = false;
+                botao.textContent = "🎮 CRIAR CONTA";
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,433 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Minha Conta - Site de Jogos</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(circle at top, #182848 0%, #0b1020 45%, #05070d 100%);
+            color: #ffffff;
+        }
+
+        header {
+            padding: 20px;
+            background: rgba(5, 8, 18, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        nav {
+            max-width: 1100px;
+            margin: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            transition: 0.2s;
+        }
+
+        nav a:hover {
+            background: rgba(0, 180, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        main {
+            width: min(900px, 92%);
+            margin: 50px auto;
+        }
+
+        .titulo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .titulo h1 {
+            font-size: 38px;
+            margin-bottom: 10px;
+        }
+
+        .titulo p {
+            color: #aab4c8;
+        }
+
+        .conta {
+            background: rgba(15, 22, 40, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        }
+
+        .usuario {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .avatar {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1769ff, #7c3aed);
+            font-size: 42px;
+        }
+
+        .usuario h2 {
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        .usuario p {
+            color: #9ca8bd;
+        }
+
+        .dados {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .card {
+            padding: 22px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .card .icone {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .card .label {
+            color: #9ca8bd;
+            font-size: 14px;
+            margin-bottom: 7px;
+        }
+
+        .card .valor {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .acoes {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .botao {
+            border: none;
+            text-decoration: none;
+            cursor: pointer;
+            padding: 14px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffffff;
+            transition: 0.2s;
+        }
+
+        .botao:hover {
+            transform: translateY(-2px);
+        }
+
+        .jogar {
+            background: linear-gradient(135deg, #00a86b, #00c878);
+        }
+
+        .sair {
+            background: linear-gradient(135deg, #b91c1c, #ef4444);
+        }
+
+        .carregando {
+            text-align: center;
+            padding: 50px;
+            color: #aab4c8;
+        }
+
+        .erro {
+            text-align: center;
+            padding: 30px;
+            color: #ff7777;
+        }
+
+        @media (max-width: 650px) {
+            .dados {
+                grid-template-columns: 1fr;
+            }
+
+            .titulo h1 {
+                font-size: 30px;
+            }
+
+            nav {
+                gap: 6px;
+            }
+
+            nav a {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <nav>
+            <a href="index.html">🏠 Início</a>
+            <a href="jogos.html">🎮 Jogos</a>
+            <a href="ranking.html">🏆 Ranking</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <section class="titulo">
+            <h1>👤 Minha Conta</h1>
+            <p>Informações do seu perfil e desempenho nos jogos.</p>
+        </section>
+
+        <section class="conta">
+
+            <div id="conteudo">
+                <div class="carregando">
+                    ⏳ Carregando informações...
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="js/auth.js"></script>
+
+    <script>
+
+        const API = "http://127.0.0.1:5000";
+
+        async function carregarConta() {
+
+            try {
+
+                const usuario = await carregarUsuario();
+
+                if (!usuario) {
+
+                    const pagina =
+                        "minha-conta.html";
+
+                    window.location.href =
+                        `login.html?redirect=${encodeURIComponent(pagina)}`;
+
+                    return;
+                }
+
+                const respostaRanking =
+                    await fetch(`${API}/api/ranking`);
+
+                if (!respostaRanking.ok) {
+                    throw new Error("Erro ao carregar ranking.");
+                }
+
+                const ranking =
+                    await respostaRanking.json();
+
+                const indice =
+                    ranking.findIndex(
+                        jogador =>
+                            Number(jogador.id) === Number(usuario.id)
+                    );
+
+                let posicao = "Não classificado";
+                let pontuacao = 0;
+
+                if (indice !== -1) {
+
+                    posicao = `${indice + 1}º`;
+
+                    pontuacao =
+                        Number(ranking[indice].pontuacao || 0);
+                }
+
+                document.getElementById("conteudo").innerHTML = `
+
+                    <div class="usuario">
+
+                        <div class="avatar">
+                            👤
+                        </div>
+
+                        <h2>${escaparHTML(usuario.nome)}</h2>
+
+                        <p>
+                            ${escaparHTML(usuario.email)}
+                        </p>
+
+                    </div>
+
+                    <div class="dados">
+
+                        <div class="card">
+
+                            <div class="icone">
+                                👤
+                            </div>
+
+                            <div class="label">
+                                Nome
+                            </div>
+
+                            <div class="valor">
+                                ${escaparHTML(usuario.nome)}
+                            </div>
+
+                        </div>
+
+                        <div class="card">
+
+                            <div class="icone">
+                                📧
+                            </div>
+
+                            <div class="label">
+                                E-mail
+                            </div>
+
+                            <div class="valor"
+                                 style="font-size: 18px; word-break: break-word;">
+                                ${escaparHTML(usuario.email)}
+                            </div>
+
+                        </div>
+
+                        <div class="card">
+
+                            <div class="icone">
+                                🏆
+                            </div>
+
+                            <div class="label">
+                                Pontuação
+                            </div>
+
+                            <div class="valor">
+                                ${pontuacao}
+                            </div>
+
+                        </div>
+
+                        <div class="card">
+
+                            <div class="icone">
+                                🥇
+                            </div>
+
+                            <div class="label">
+                                Posição no Ranking
+                            </div>
+
+                            <div class="valor">
+                                ${posicao}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="acoes">
+
+                        <a
+                            class="botao jogar"
+                            href="jogos.html">
+                            🎮 JOGAR
+                        </a>
+
+                        <button
+                            class="botao sair"
+                            onclick="sair()">
+                            🚪 SAIR
+                        </button>
+
+                    </div>
+                `;
+
+            } catch (erro) {
+
+                console.error(
+                    "Erro ao carregar conta:",
+                    erro
+                );
+
+                document.getElementById("conteudo").innerHTML = `
+
+                    <div class="erro">
+
+                        ❌ Não foi possível carregar
+                        os dados da conta.
+
+                        <br><br>
+
+                        Verifique se o Flask está
+                        funcionando em:
+
+                        <br>
+
+                        http://127.0.0.1:5000
+
+                    </div>
+
+                `;
+            }
+        }
+
+
+        function escaparHTML(valor) {
+
+            const div =
+                document.createElement("div");
+
+            div.textContent =
+                valor ?? "";
+
+            return div.innerHTML;
+        }
+
+
+        carregarConta();
+
+    </script>
+
+    <script src="js/menu.js"></script>
+
+</body>
+
+</html>

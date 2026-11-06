@@ -1,0 +1,610 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Ranking - Site de Jogos</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            min-height: 100vh;
+
+            color: white;
+
+            background:
+                radial-gradient(
+                    circle at top,
+                    #182848 0%,
+                    #0b1020 45%,
+                    #05070d 100%
+                );
+
+        }
+
+        header {
+
+            background:
+                rgba(5, 8, 18, 0.95);
+
+            border-bottom:
+                1px solid #26345f;
+
+            padding:
+                18px 40px;
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 100;
+
+        }
+
+        .navbar {
+
+            max-width: 1200px;
+
+            margin: auto;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+        }
+
+        .logo {
+
+            color: #00e5ff;
+
+            font-size: 25px;
+
+            font-weight: bold;
+
+            text-decoration: none;
+
+            white-space: nowrap;
+
+        }
+
+        nav {
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 10px;
+
+            justify-content: center;
+
+        }
+
+        nav a {
+
+            color: white;
+
+            text-decoration: none;
+
+            padding: 10px 14px;
+
+            border-radius: 8px;
+
+            transition: 0.2s;
+
+        }
+
+        nav a:hover {
+
+            background: #17213e;
+
+            color: #00e5ff;
+
+        }
+
+        main {
+
+            max-width: 950px;
+
+            margin: auto;
+
+            padding: 50px 20px;
+
+        }
+
+        .titulo {
+
+            text-align: center;
+
+            margin-bottom: 35px;
+
+        }
+
+        .titulo h1 {
+
+            color: #00e5ff;
+
+            font-size: 40px;
+
+            margin-bottom: 10px;
+
+        }
+
+        .titulo p {
+
+            color: #aeb9d5;
+
+            font-size: 17px;
+
+        }
+
+        .ranking {
+
+            background:
+                rgba(14, 21, 40, 0.95);
+
+            border:
+                1px solid #26345f;
+
+            border-radius: 15px;
+
+            overflow: hidden;
+
+            box-shadow:
+                0 15px 40px
+                rgba(0, 0, 0, 0.4);
+
+        }
+
+        .ranking-cabecalho {
+
+            display: grid;
+
+            grid-template-columns:
+                100px 1fr 180px;
+
+            padding: 18px 25px;
+
+            background: #111a30;
+
+            color: #00e5ff;
+
+            font-weight: bold;
+
+            border-bottom:
+                1px solid #26345f;
+
+        }
+
+        .jogador {
+
+            display: grid;
+
+            grid-template-columns:
+                100px 1fr 180px;
+
+            align-items: center;
+
+            padding: 20px 25px;
+
+            border-bottom:
+                1px solid #202d4d;
+
+        }
+
+        .jogador:last-child {
+
+            border-bottom: none;
+
+        }
+
+        .posicao {
+
+            font-size: 24px;
+
+            font-weight: bold;
+
+        }
+
+        .nome {
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+        }
+
+        .pontos {
+
+            color: #00e5ff;
+
+            font-size: 19px;
+
+            font-weight: bold;
+
+            text-align: right;
+
+        }
+
+        .primeiro {
+
+            background:
+                rgba(255, 215, 0, 0.08);
+
+        }
+
+        .segundo {
+
+            background:
+                rgba(192, 192, 192, 0.06);
+
+        }
+
+        .terceiro {
+
+            background:
+                rgba(205, 127, 50, 0.06);
+
+        }
+
+        .vazio {
+
+            text-align: center;
+
+            padding: 50px 20px;
+
+            color: #9ba7c1;
+
+        }
+
+        .carregando {
+
+            text-align: center;
+
+            padding: 50px;
+
+            color: #00e5ff;
+
+        }
+
+        .erro {
+
+            text-align: center;
+
+            padding: 50px;
+
+            color: #ff6b6b;
+
+        }
+
+        footer {
+
+            text-align: center;
+
+            color: #74809d;
+
+            border-top:
+                1px solid #1d2949;
+
+            margin-top: 50px;
+
+            padding: 25px;
+
+        }
+
+        @media (max-width: 650px) {
+
+            header {
+
+                padding: 15px;
+
+            }
+
+            .navbar {
+
+                flex-direction: column;
+
+            }
+
+            .ranking-cabecalho,
+            .jogador {
+
+                grid-template-columns:
+                    65px 1fr 110px;
+
+                padding:
+                    15px;
+
+            }
+
+            .titulo h1 {
+
+                font-size: 30px;
+
+            }
+
+            .pontos {
+
+                font-size: 16px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<header>
+
+    <div class="navbar">
+
+        <a
+            href="index.html"
+            class="logo"
+        >
+            🎮 SITE DE JOGOS
+        </a>
+
+        <nav>
+
+            <a href="index.html">
+                Início
+            </a>
+
+            <a href="jogos.html">
+                Jogos
+            </a>
+
+            <a href="ranking.html">
+                Ranking
+            </a>
+
+            <a href="login.html">
+                Login
+            </a>
+
+            <a href="cadastro.html">
+                Cadastro
+            </a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+<main>
+
+    <section class="titulo">
+
+        <h1>
+            🏆 Ranking
+        </h1>
+
+        <p>
+            Veja os jogadores com maior pontuação.
+        </p>
+
+    </section>
+
+
+    <section class="ranking">
+
+        <div class="ranking-cabecalho">
+
+            <span>
+                Posição
+            </span>
+
+            <span>
+                Jogador
+            </span>
+
+            <span style="text-align:right;">
+                Pontuação
+            </span>
+
+        </div>
+
+        <div
+            id="rankingLista"
+            class="carregando"
+        >
+            Carregando ranking...
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer>
+
+    © 2026 Site de Jogos —
+    Todos os direitos reservados.
+
+</footer>
+
+
+<script src="js/auth.js"></script>
+
+<script>
+
+    const API_RANKING =
+        "http://127.0.0.1:5000/api/ranking";
+
+
+    function medalha(posicao) {
+
+        if (posicao === 1) {
+            return "🥇";
+        }
+
+        if (posicao === 2) {
+            return "🥈";
+        }
+
+        if (posicao === 3) {
+            return "🥉";
+        }
+
+        return posicao + "º";
+
+    }
+
+
+    async function carregarRanking() {
+
+        const lista =
+            document.getElementById(
+                "rankingLista"
+            );
+
+        try {
+
+            const resposta =
+                await fetch(API_RANKING);
+
+            if (!resposta.ok) {
+
+                throw new Error(
+                    "Erro ao carregar ranking."
+                );
+
+            }
+
+            const jogadores =
+                await resposta.json();
+
+
+            if (
+                !jogadores ||
+                jogadores.length === 0
+            ) {
+
+                lista.className = "vazio";
+
+                lista.innerHTML = `
+                    🏆<br><br>
+                    Ainda não existem jogadores
+                    no ranking.
+                `;
+
+                return;
+
+            }
+
+
+            lista.className = "";
+
+            lista.innerHTML = "";
+
+
+            jogadores.forEach(
+                (jogador, indice) => {
+
+                    const posicao =
+                        indice + 1;
+
+                    let classe = "";
+
+                    if (posicao === 1) {
+                        classe = "primeiro";
+                    }
+
+                    if (posicao === 2) {
+                        classe = "segundo";
+                    }
+
+                    if (posicao === 3) {
+                        classe = "terceiro";
+                    }
+
+
+                    const linha =
+                        document.createElement(
+                            "div"
+                        );
+
+                    linha.className =
+                        `jogador ${classe}`;
+
+
+                    linha.innerHTML = `
+
+                        <div class="posicao">
+                            ${medalha(posicao)}
+                        </div>
+
+                        <div class="nome">
+                            ${jogador.nome}
+                        </div>
+
+                        <div class="pontos">
+                            ${Number(
+                                jogador.pontuacao || 0
+                            ).toLocaleString("pt-BR")}
+                            pontos
+                        </div>
+
+                    `;
+
+
+                    lista.appendChild(linha);
+
+                }
+            );
+
+
+        } catch (erro) {
+
+            console.error(erro);
+
+            lista.className = "erro";
+
+            lista.innerHTML = `
+                ❌ Não foi possível
+                carregar o ranking.
+                <br><br>
+                Verifique se o servidor
+                Flask está funcionando.
+            `;
+
+        }
+
+    }
+
+
+    carregarRanking();
+
+</script>
+
+</body>
+
+</html>

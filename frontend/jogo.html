@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore Eldoria em Reinos em Guerra, um RPG medieval 3D.">
+    <meta name="theme-color" content="#120d09">
+
+    <title>Reinos em Guerra — Mundo 3D</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/jogo.css">
+</head>
+
+<body>
+    <header class="cabecalho">
+        <div class="logo">⚔️ REINOS EM GUERRA</div>
+
+        <nav class="menu" aria-label="Menu principal">
+            <a href="index.html">🏠 Início</a>
+            <a href="ranking.html">🏆 Ranking</a>
+            <a href="selecionar-personagem.html">🛡️ Personagens</a>
+        </nav>
+    </header>
+
+    <main id="rpg">
+        <div id="carregando">Preparando o mundo de Eldoria...</div>
+
+        <section id="interface">
+            <div class="painel-personagem">
+                <div id="nomeHero">Herói</div>
+                <div id="classeHero">Guerreiro</div>
+
+                <div class="barra-label">
+                    ❤️ VIDA <span id="vidaTexto">100/100</span>
+                </div>
+                <div class="barra-fundo">
+                    <div id="barraVida" class="barra vida"></div>
+                </div>
+
+                <div class="barra-label">
+                    🔮 MANA <span id="manaTexto">50/50</span>
+                </div>
+                <div class="barra-fundo">
+                    <div id="barraMana" class="barra mana"></div>
+                </div>
+
+                <div class="barra-label">
+                    ⭐ EXPERIÊNCIA <span id="xpTexto">0/100</span>
+                </div>
+                <div class="barra-fundo">
+                    <div id="barraXP" class="barra xp"></div>
+                </div>
+
+                <div id="nivelHero">⭐ Nível 1</div>
+                <div id="ouroHero">🪙 100</div>
+            </div>
+
+            <div id="mensagemJogo">Explore as terras de Eldoria!</div>
+
+            <div class="controles">
+                <div class="controle-titulo">MOVIMENTAÇÃO</div>
+                <div>W A S D ou setas — Mover</div>
+                <div>Mouse — Girar câmera</div>
+                <div>Shift — Correr</div>
+                <div>Espaço — Pular</div>
+                <div>J ou botão Atacar — Golpear</div>
+                <div>C — Comemorar</div>
+                <div>V — Acenar</div>
+                <div>Mouse wheel — Zoom</div>
+            </div>
+
+            <div class="botoes-jogo">
+                <button type="button" id="botaoAtaque">⚔️ Atacar</button>
+                <button type="button" id="botaoPular">⬆️ Pular</button>
+                <button type="button" id="botaoMenu">📜 Ficha</button>
+            </div>
+        </section>
+
+        <section id="ficha" class="oculta" aria-label="Ficha do herói">
+            <div class="ficha-conteudo">
+                <button type="button" id="fecharFicha" class="fechar">✖</button>
+
+                <h2>⚔️ Ficha do Herói</h2>
+                <div id="dadosFicha"></div>
+
+                <h3>🎒 Inventário</h3>
+                <div id="inventarioFicha"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Three.js r128 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- GLTFLoader compatível com Three.js r128 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <!-- Motor do RPG -->
+    <script src="js/jogo.js"></script>
+</body>
+</html>
+ 

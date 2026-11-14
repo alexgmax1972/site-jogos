@@ -1,9 +1,9 @@
-"use strict";
+﻿"use strict";
 
 // =====================================================
 // REINOS EM GUERRA - MOTOR 3D
 // THREE.JS r128 + GLTFLoader
-// Mapa do castelo + inimigos + poÃ§Ã£o de cura + som + grÃ¡ficos
+// Mapa do castelo + inimigos + poção de cura + som + gráficos
 // =====================================================
 
 // ---------- MODELOS DOS PERSONAGENS ----------
@@ -18,6 +18,7 @@ const MODELOS_PERSONAGENS = {
     barbaro: "modelos/barbaro/barbaro.glb",
     invocador: "modelos/invocador/invocador.glb",
     cavaleirorunico: "modelos/cavaleiro/rune-knight.glb",
+    monge: "modelos/monge/monge.glb",
     samurai: "modelos/samurai/samurai.glb"
 };
 
@@ -42,13 +43,13 @@ function identificarModelo(classe) {
         barbaro: "barbaro", barbarian: "barbaro",
         invocador: "invocador", summoner: "invocador",
         cavaleiro: "cavaleirorunico", cavaleirorunico: "cavaleirorunico", runeknight: "cavaleirorunico",
-        samurai: "samurai", monge: "samurai", monk: "samurai"   // o antigo Monge agora Ã© Samurai
+        samurai: "samurai", monge: "monge", monk: "monge"
     };
     return aliases[nome] || null;
 }
 
 // ---------- AVISO DE ERROS NA TELA (ajuda a achar problemas) ----------
-const VERSAO = "v6 Â· samurai + horda viva + magia";
+const VERSAO = "v7 · samurai + horda viva + pausa responsiva";
 const errosMostrados = new Set();
 function reportarErro(erro) {
     const texto = String((erro && erro.message) || erro);
@@ -63,13 +64,13 @@ function reportarErro(erro) {
             box.style.cssText = "position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;padding:8px 12px;border-radius:8px;background:rgba(150,0,0,.92);color:#fff;font:12px monospace;white-space:pre-wrap;pointer-events:none";
             document.body.appendChild(box);
         }
-        box.textContent = "âš ï¸ Erro no jogo (" + VERSAO + "):\n" + Array.from(errosMostrados).join("\n");
+        box.textContent = "⚠️ Erro no jogo (" + VERSAO + "):\n" + Array.from(errosMostrados).join("\n");
     } catch (e2) { /* ignora */ }
 }
 window.addEventListener("error", e => reportarErro(e.message + " @" + String(e.filename || "").split("/").pop() + ":" + e.lineno));
 window.addEventListener("unhandledrejection", e => reportarErro(e.reason));
 
-// ---------- SOM (embutido: nÃ£o depende de js/som.js) ----------
+// ---------- SOM (embutido: não depende de js/som.js) ----------
 if (!window.Som) {
 (function () {
     let ctx = null, master, sfxG, musG, ambG;
@@ -292,11 +293,11 @@ try {
 }
 
 if (!personagemSalvo) {
-    if (elementoCarregamento) elementoCarregamento.textContent = "Nenhum herÃ³i encontrado. Crie seu personagem primeiro.";
+    if (elementoCarregamento) elementoCarregamento.textContent = "Nenhum herói encontrado. Crie seu personagem primeiro.";
 } else if (typeof THREE === "undefined" || typeof THREE.GLTFLoader === "undefined") {
     if (elementoCarregamento) elementoCarregamento.textContent = "Erro ao carregar Three.js ou GLTFLoader.";
 } else if (!areaJogo || !elementoCarregamento) {
-    console.error("Elementos do jogo nÃ£o encontrados.");
+    console.error("Elementos do jogo não encontrados.");
 } else {
     iniciarRPG3D(personagemSalvo);
 }
@@ -314,9 +315,9 @@ function iniciarRPG3D(personagem) {
     const RECARGA_POCAO = 3;
     const LIMITE_MAPA = 140;
 
-    // ---------- DADOS DO HERÃ“I ----------
+    // ---------- DADOS DO HERÓI ----------
     personagem.nome = personagem.nome || "Aventureiro";
-    personagem.classe = personagem.classe || "Cavaleiro RÃºnico";
+    personagem.classe = personagem.classe || "Cavaleiro Rúnico";
     personagem.nivel = Math.max(1, num(personagem.nivel, 1));
     personagem.hpMax = Math.max(1, num(personagem.hpMax ?? personagem.vidaMaxima ?? personagem.hp ?? personagem.vida, 100));
     personagem.hp = Math.min(personagem.hpMax, Math.max(0, num(personagem.hp ?? personagem.vida, personagem.hpMax)));
@@ -331,32 +332,32 @@ function iniciarRPG3D(personagem) {
 
     const classeIdentificada = identificarModelo(personagem.classe);
     if (!classeIdentificada) {
-        carregando.textContent = "Classe nÃ£o reconhecida: " + personagem.classe;
-        console.error("Classe nÃ£o reconhecida:", personagem.classe);
+        carregando.textContent = "Classe não reconhecida: " + personagem.classe;
+        console.error("Classe não reconhecida:", personagem.classe);
         return;
     }
     const caminhoModelo = MODELOS_PERSONAGENS[classeIdentificada];
 
-    // ---------- CENÃRIO DE CADA PERSONAGEM ----------
-    // arq = arquivo .glb | chao = cor do campo em volta | ceu = cÃ©u e nÃ©voa
-    // folha = [matiz, saturaÃ§Ã£o, luz] das Ã¡rvores de fora | arvores = quantidade (multiplicador)
+    // ---------- CENÁRIO DE CADA PERSONAGEM ----------
+    // arq = arquivo .glb | chao = cor do campo em volta | ceu = céu e névoa
+    // folha = [matiz, saturação, luz] das árvores de fora | arvores = quantidade (multiplicador)
     const CENARIOS_CLASSE = {
         guerreiro:  { nome: "Castelo de Eldoria",  arq: "castelo-eldoria.glb",     chao: 0x4f9a3a, ceu: 0xa9d6f5, folha: [0.30, 0.55, 0.28], arvores: 1.0 },
         mago:       { nome: "Torre Arcana",        arq: "torre-arcana.glb",        chao: 0x5d6fae, ceu: 0xb7b2ea, folha: [0.74, 0.35, 0.36], arvores: 0.8 },
         arqueiro:   { nome: "Floresta dos Arqueiros", arq: "floresta-arqueiro.glb", chao: 0x3f8a3a, ceu: 0xb4dcc0, folha: [0.33, 0.60, 0.26], arvores: 1.5, esc: 2 },
-        paladino:   { nome: "SantuÃ¡rio Sagrado",   arq: "santuario-paladino.glb",  chao: 0xb8a46a, ceu: 0xf0e4c0, folha: [0.20, 0.40, 0.34], arvores: 0.5 },
-        assassino:  { nome: "RuÃ­nas Sombrias",     arq: "ruinas-sombrias.glb",     chao: 0x5c6b78, ceu: 0x9fb0c0, folha: [0.50, 0.30, 0.24], arvores: 0.7 },
+        paladino:   { nome: "Santuário Sagrado",   arq: "santuario-paladino.glb",  chao: 0xb8a46a, ceu: 0xf0e4c0, folha: [0.20, 0.40, 0.34], arvores: 0.5 },
+        assassino:  { nome: "Ruínas Sombrias",     arq: "ruinas-sombrias.glb",     chao: 0x5c6b78, ceu: 0x9fb0c0, folha: [0.50, 0.30, 0.24], arvores: 0.7 },
         druida:     { nome: "Bosque Sagrado",      arq: "bosque-sagrado.glb",      chao: 0x3f9a45, ceu: 0xb0e0c8, folha: [0.34, 0.65, 0.30], arvores: 1.3 },
-        necromante: { nome: "NecrÃ³pole",           arq: "necropole.glb",           chao: 0x5a6e70, ceu: 0x9db5bf, folha: [0.50, 0.20, 0.25], arvores: 0.5 },
+        necromante: { nome: "Necrópole",           arq: "necropole.glb",           chao: 0x5a6e70, ceu: 0x9db5bf, folha: [0.50, 0.20, 0.25], arvores: 0.5 },
         barbaro:    { nome: "Terra de Guerra",     arq: "terra-guerra.glb",        chao: 0x8a6a45, ceu: 0xe0c9a8, folha: [0.10, 0.40, 0.30], arvores: 0.6 },
-        invocador:  { nome: "CÃ­rculo Arcano",      arq: "circulo-arcano.glb",      chao: 0x7a5fb0, ceu: 0xc6b4ee, folha: [0.78, 0.40, 0.35], arvores: 0.7 },
+        invocador:  { nome: "Círculo Arcano",      arq: "circulo-arcano.glb",      chao: 0x7a5fb0, ceu: 0xc6b4ee, folha: [0.78, 0.40, 0.35], arvores: 0.7 },
         cavaleiro:  { nome: "Fortaleza das Runas", arq: "fortaleza-runas.glb",     chao: 0x667488, ceu: 0xaec0d8, folha: [0.36, 0.35, 0.26], arvores: 0.8 },
         samurai:    { nome: "Fortaleza Samurai",   arq: "fortaleza-samurai.glb",   chao: 0x8a6a58, ceu: 0xe6c8c0, folha: [0.02, 0.50, 0.45], arvores: 0.8 }
     };
     const chaveCenario = classeIdentificada === "cavaleirorunico" ? "cavaleiro" : classeIdentificada;
     const dadosCenario = CENARIOS_CLASSE[chaveCenario] || CENARIOS_CLASSE.guerreiro;
-    // 100 cenÃ¡rios por personagem: o modelo 3D do lugar Ã© o mesmo, mas clima, cÃ©u, cor do chÃ£o,
-    // vegetaÃ§Ã£o, pedras e disposiÃ§Ã£o mudam a cada nÃºmero (1 = cenÃ¡rio original)
+    // 100 cenários por personagem: o modelo 3D do lugar é o mesmo, mas clima, céu, cor do chão,
+    // vegetação, pedras e disposição mudam a cada número (1 = cenário original)
     const NUM_CENARIOS = 100;
     const CHAVE_CEN = "rpg_cenario_" + classeIdentificada;
     let numCenario = 1;
@@ -365,10 +366,10 @@ function iniciarRPG3D(personagem) {
         { nome: "Dia claro" },
         { nome: "Amanhecer",       ceu: 0xffc9a8, k: 0.55 },
         { nome: "Tarde dourada",   ceu: 0xffd98a, k: 0.50, folhaH: -0.04 },
-        { nome: "PÃ´r do sol",      ceu: 0xff8a5c, k: 0.60, folhaH: -0.08, escuro: 0.12 },
-        { nome: "CrepÃºsculo",      ceu: 0x8a6ab0, k: 0.60, escuro: 0.25 },
+        { nome: "Pôr do sol",      ceu: 0xff8a5c, k: 0.60, folhaH: -0.08, escuro: 0.12 },
+        { nome: "Crepúsculo",      ceu: 0x8a6ab0, k: 0.60, escuro: 0.25 },
         { nome: "Noite de lua",    ceu: 0x1b2a4a, k: 0.80, escuro: 0.45, folhaL: -0.10 },
-        { nome: "NÃ©voa",           ceu: 0xcfd6dc, k: 0.70, chao: 0x9aa3a0, kc: 0.35 },
+        { nome: "Névoa",           ceu: 0xcfd6dc, k: 0.70, chao: 0x9aa3a0, kc: 0.35 },
         { nome: "Neve",            ceu: 0xe8f0f8, k: 0.60, chao: 0xeef3f6, kc: 0.75, folhaS: -0.25 },
         { nome: "Tempestade",      ceu: 0x5a6674, k: 0.65, escuro: 0.25 },
         { nome: "Primavera",       ceu: 0xbfe8ff, k: 0.40, chao: 0xa6d65a, kc: 0.25, folhaH: 0.60 }
@@ -380,7 +381,7 @@ function iniciarRPG3D(personagem) {
         let h = 0; for (const ch of classeIdentificada) h = (h * 31 + ch.charCodeAt(0)) | 0;
         const rnd = mulberry32(h + n * 7919);
         const hsl = {};
-        if (v > 0) {                                           // cada "sÃ©rie" de 10 muda a paisagem
+        if (v > 0) {                                           // cada "série" de 10 muda a paisagem
             const c = new THREE.Color(r.chao); c.getHSL(hsl);
             c.setHSL((hsl.h + (rnd() - 0.5) * 0.14 + 1) % 1, Math.min(1, Math.max(0.1, hsl.s * (0.7 + rnd() * 0.6))), Math.min(0.72, Math.max(0.22, hsl.l * (0.85 + rnd() * 0.3))));
             r.chao = c.getHex();
@@ -401,10 +402,10 @@ function iniciarRPG3D(personagem) {
     const tema = gerarCenario(dadosCenario, numCenario);
     let corMapaChao = "#" + new THREE.Color(tema.chao).multiplyScalar(1.15).getHexString();
 
-    // ---------- QUALIDADE GRÃFICA ----------
+    // ---------- QUALIDADE GRÁFICA ----------
     const PRESETS = {
         baixo: { nome: "Baixo", pixel: 1,    sombras: false, sombraTam: 512,  arvores: 60,  pedras: 25, grama: 0,     maxInim: 6, horda: 400, slots: 6,  filtro: false },
-        medio: { nome: "MÃ©dio", pixel: 1.25, sombras: true,  sombraTam: 1024, arvores: 100, pedras: 40, grama: 2500,  maxInim: 10, horda: 1200, slots: 10, filtro: false },
+        medio: { nome: "Médio", pixel: 1.25, sombras: true,  sombraTam: 1024, arvores: 100, pedras: 40, grama: 2500,  maxInim: 10, horda: 1200, slots: 10, filtro: false },
         alto:  { nome: "Alto",  pixel: 1.75, sombras: true,  sombraTam: 2048, arvores: 150, pedras: 60, grama: 6000,  maxInim: 14, horda: 2500, slots: 18, filtro: true },
         ultra: { nome: "Ultra", pixel: 2,    sombras: true,  sombraTam: 2048, arvores: 220, pedras: 90, grama: 12000, maxInim: 18, horda: 4000, slots: 30, filtro: true }
     };
@@ -414,16 +415,16 @@ function iniciarRPG3D(personagem) {
         const salvo = localStorage.getItem("rpg_graficos");
         if (salvo && PRESETS[salvo]) nivelGraf = salvo;
     } catch (erro) { /* ignora */ }
-    // Horda de modelos 3D (anÃµes, gnoll, andarilho...) Ã© SÃ“ da classe Guerreiro; as outras classes mantÃªm seus prÃ³prios inimigos
+    // Horda de modelos 3D (anões, gnoll, andarilho...) é SÓ da classe Guerreiro; as outras classes mantêm seus próprios inimigos
     const HORDA_ATIVA = classeIdentificada === "guerreiro";
     Object.values(PRESETS).forEach(p => { if (HORDA_ATIVA) p.maxInim = 0; else p.horda = 0; });
     const GR = Object.assign({}, PRESETS[nivelGraf]);
 
-    // ---------- DIFICULDADE: FÃ¡cil / Normal / DifÃ­cil (o dano dos inimigos cresce com o nÃ­vel do herÃ³i) ----------
+    // ---------- DIFICULDADE: Fácil / Normal / Difícil (o dano dos inimigos cresce com o nível do herói) ----------
     const DIFICULDADES = {
-        facil:   { nome: "FÃ¡cil",   dano: 0.6, vida: 0.75, escala: 0.04, xp: 0.8 },
+        facil:   { nome: "Fácil",   dano: 0.6, vida: 0.75, escala: 0.04, xp: 0.8 },
         normal:  { nome: "Normal",  dano: 1.0, vida: 1.0,  escala: 0.08, xp: 1.0 },
-        dificil: { nome: "DifÃ­cil", dano: 1.7, vida: 1.6,  escala: 0.16, xp: 1.6 }
+        dificil: { nome: "Difícil", dano: 1.7, vida: 1.6,  escala: 0.16, xp: 1.6 }
     };
     let dificuldade = "normal";
     try { const dsalva = localStorage.getItem("rpg_dificuldade"); if (DIFICULDADES[dsalva]) dificuldade = dsalva; } catch (erro) { /* ignora */ }
@@ -435,7 +436,7 @@ function iniciarRPG3D(personagem) {
     let rotuloCen = null;
 
     // =================================================
-    // CENA, CÃ‚MERA, RENDERIZADOR
+    // CENA, CÂMERA, RENDERIZADOR
     // =================================================
     const COR_CEU = tema.ceu;
     const cena = new THREE.Scene();
@@ -450,7 +451,7 @@ function iniciarRPG3D(personagem) {
         renderizador = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     } catch (erro) {
         console.error(erro);
-        carregando.textContent = "Seu navegador nÃ£o conseguiu iniciar o WebGL.";
+        carregando.textContent = "Seu navegador não conseguiu iniciar o WebGL.";
         return;
     }
     renderizador.setSize(area.clientWidth, area.clientHeight);
@@ -471,7 +472,7 @@ function iniciarRPG3D(personagem) {
     area.insertBefore(renderizador.domElement, area.firstChild);
 
     // =================================================
-    // ILUMINAÃ‡ÃƒO (clara)
+    // ILUMINAÇÃO (clara)
     // =================================================
     const luzAmbiente = new THREE.HemisphereLight(0xffffff, 0x8a9a7a, 1.25);
     cena.add(luzAmbiente);
@@ -528,14 +529,14 @@ function iniciarRPG3D(personagem) {
     cena.add(terreno);
 
     // =================================================
-    // CENÃRIO DA CLASSE (.glb) + MAPA DE CHÃƒO E PAREDES
+    // CENÁRIO DA CLASSE (.glb) + MAPA DE CHÃO E PAREDES
     // =================================================
-    const CS = 0.5;                                   // tamanho de cada cÃ©lula do mapa de colisÃ£o
+    const CS = 0.5;                                   // tamanho de cada célula do mapa de colisão
     let mapa = null;                                  // { gx0, gz0, nx, nz, topo[], muro }
     let mapaBg = null;                                // imagem do minimapa
-    let zonaCenario = { x0: -55, x1: 55, z0: -60, z1: 45 };   // Ã¡rea ocupada pelo cenÃ¡rio (a decoraÃ§Ã£o fica fora)
+    let zonaCenario = { x0: -55, x1: 55, z0: -60, z1: 45 };   // área ocupada pelo cenário (a decoração fica fora)
     let cenarioPronto = false, cenarioFalhou = false;
-    let obstaculosFixos = [];                         // sÃ³ usado se o .glb nÃ£o carregar
+    let obstaculosFixos = [];                         // só usado se o .glb não carregar
 
     function celda(x, z) {
         if (!mapa) return -1;
@@ -543,7 +544,7 @@ function iniciarRPG3D(personagem) {
         if (ix < 0 || iz < 0 || ix >= mapa.nx || iz >= mapa.nz) return -1;
         return iz * mapa.nx + ix;
     }
-    // altura do chÃ£o em (x,z): a superfÃ­cie mais alta que fique atÃ© 1,2 acima dos pÃ©s (sobe degraus, passa por baixo de telhados)
+    // altura do chão em (x,z): a superfície mais alta que fique até 1,2 acima dos pés (sobe degraus, passa por baixo de telhados)
     function alturaMundo(x, z, pesY) {
         const k = celda(x, z);
         if (k < 0) return 0;
@@ -638,7 +639,7 @@ function iniciarRPG3D(personagem) {
 
         mapa = { gx0, gz0, nx, nz, topo, muro };
 
-        // imagem do minimapa (1 pixel por cÃ©lula)
+        // imagem do minimapa (1 pixel por célula)
         const cv = document.createElement("canvas");
         cv.width = nx; cv.height = nz;
         const g = cv.getContext("2d");
@@ -659,7 +660,7 @@ function iniciarRPG3D(personagem) {
         mapaBg = cv;
     }
 
-    // ponto aberto dentro do cenÃ¡rio (sem parede perto e sem teto em cima)
+    // ponto aberto dentro do cenário (sem parede perto e sem teto em cima)
     function pontoLivreNoCenario(rnd, minDist, ref) {
         if (!mapa) return null;
         for (let t = 0; t < 40; t++) {
@@ -694,7 +695,7 @@ function iniciarRPG3D(personagem) {
         m.needsUpdate = true;
     }
 
-    // castelo simples, sÃ³ aparece se o .glb nÃ£o for encontrado
+    // castelo simples, só aparece se o .glb não for encontrado
     function criarCasteloReserva() {
         const g = new THREE.Group();
         const matP = new THREE.MeshStandardMaterial({ color: 0xa0a3aa, roughness: 0.9 });
@@ -726,13 +727,13 @@ function iniciarRPG3D(personagem) {
 
     function cenarioFalha() {
         cenarioFalhou = true;
-        console.warn("CenÃ¡rio GLB nÃ£o encontrado, usando o castelo simples:", dadosCenario.arq);
+        console.warn("Cenário GLB não encontrado, usando o castelo simples:", dadosCenario.arq);
         criarCasteloReserva();
         zonaCenario = { x0: -25, x1: 25, z0: -35, z1: -5 };
         construirCenario();
         heroi.position.set(0, 0, 20);
         colocarItensIniciais();
-        msg("âš ï¸ CenÃ¡rio 3D nÃ£o encontrado em modelos/cenarios/" + dadosCenario.arq, 8);
+        msg("⚠️ Cenário 3D não encontrado em modelos/cenarios/" + dadosCenario.arq, 8);
     }
 
     function carregarCenarioClasse(caminhos) {
@@ -753,13 +754,13 @@ function iniciarRPG3D(personagem) {
                 construirMapa(raiz, caixa);
                 zonaCenario = { x0: caixa.min.x, x1: caixa.max.x, z0: caixa.min.z, z1: caixa.max.z };
                 cenarioPronto = true;
-                construirCenario();          // refaz Ã¡rvores, pedras e grama sÃ³ FORA da Ã¡rea do cenÃ¡rio
+                construirCenario();          // refaz árvores, pedras e grama só FORA da área do cenário
                 posicionarHeroiInicio();
                 colocarItensIniciais();
                 if (HORDA_ATIVA) { reiniciarHorda(); carregarModelosHorda(); }
-                msg("ðŸ° " + tema.nome + " Â· " + tema.clima + " (" + numCenario + "/100)", 5);
+                msg("🏰 " + tema.nome + " · " + tema.clima + " (" + numCenario + "/100)", 5);
             } catch (erro) {
-                console.error("Erro ao preparar cenÃ¡rio:", atual, erro);
+                console.error("Erro ao preparar cenário:", atual, erro);
                 cenarioFalha();
             }
         }, undefined, () => {
@@ -770,7 +771,7 @@ function iniciarRPG3D(personagem) {
     carregarCenarioClasse(["modelos/cenarios/" + dadosCenario.arq, "cenarios/" + dadosCenario.arq, "modelos/" + dadosCenario.arq]);
 
     // =================================================
-    // CENÃRIO (Ã¡rvores, pedras, grama) - muda com a qualidade grÃ¡fica
+    // CENÁRIO (árvores, pedras, grama) - muda com a qualidade gráfica
     // =================================================
     function mulberry32(a) {
         return function () {
@@ -802,7 +803,7 @@ function iniciarRPG3D(personagem) {
         for (let t = 0; t < 12; t++) {
             const x = (rnd() - 0.5) * 2 * (LIMITE_MAPA - 4);
             const z = (rnd() - 0.5) * 2 * (LIMITE_MAPA - 4);
-            if (x > zonaCenario.x0 - 5 - folga && x < zonaCenario.x1 + 5 + folga && z > zonaCenario.z0 - 5 - folga && z < zonaCenario.z1 + 20 + folga) continue;   // fora do cenÃ¡rio e da Ã¡rea de inÃ­cio
+            if (x > zonaCenario.x0 - 5 - folga && x < zonaCenario.x1 + 5 + folga && z > zonaCenario.z0 - 5 - folga && z < zonaCenario.z1 + 20 + folga) continue;   // fora do cenário e da área de início
             return [x, z];
         }
         return null;
@@ -811,11 +812,11 @@ function iniciarRPG3D(personagem) {
     function construirCenario() {
         while (cenarioGrupo.children.length) cenarioGrupo.remove(cenarioGrupo.children[0]);
         obstaculosCenario = [];
-        const rnd = mulberry32(tema.seed);   // mesma disposiÃ§Ã£o para o mesmo nÃºmero de cenÃ¡rio
+        const rnd = mulberry32(tema.seed);   // mesma disposição para o mesmo número de cenário
         const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new THREE.Vector3(), s = new THREE.Vector3(), eu = new THREE.Euler();
         const cor = new THREE.Color();
 
-        // Ã¡rvores
+        // árvores
         const nA = Math.round(GR.arvores * tema.arvores);
         const troncos = new THREE.InstancedMesh(geoTronco, matTronco, nA);
         const folhas = new THREE.InstancedMesh(geoFolhas, matFolhas, nA);
@@ -889,7 +890,7 @@ function iniciarRPG3D(personagem) {
     }
 
     // =================================================
-    // HERÃ“I 3D
+    // HERÓI 3D
     // =================================================
     const heroi = new THREE.Group();
     cena.add(heroi);
@@ -899,7 +900,7 @@ function iniciarRPG3D(personagem) {
     heroi.add(luzHeroi);
 
     let modelo3D = null, mixer = null, animacaoAtual = null;
-    let comboNomes = [];                       // animaÃ§Ãµes de golpe do prÃ³prio modelo (soco, chute, giro, espada...)
+    let comboNomes = [];                       // animações de golpe do próprio modelo (soco, chute, giro, espada...)
     let acoes = {};
     let modeloCarregado = false;
     let noAr = false, velocidadeVertical = 0, pulosFeitos = 0;
@@ -916,7 +917,7 @@ function iniciarRPG3D(personagem) {
         acoes = {};
         animacaoAtual = null;
         if (!animacoes.length) {
-            console.warn("Este GLB nÃ£o possui animaÃ§Ãµes:", classeIdentificada);
+            console.warn("Este GLB não possui animações:", classeIdentificada);
             return;
         }
         const mapa = {
@@ -1023,7 +1024,7 @@ function iniciarRPG3D(personagem) {
             try { prepararModelo(gltf); }
             catch (erro) {
                 console.error("Erro ao preparar personagem:", erro);
-                carregando.textContent = "O modelo foi encontrado, mas nÃ£o pÃ´de ser preparado.";
+                carregando.textContent = "O modelo foi encontrado, mas não pôde ser preparado.";
             }
         },
         progresso => {
@@ -1034,7 +1035,7 @@ function iniciarRPG3D(personagem) {
         erro => {
             console.error("Erro ao carregar modelo:", caminhoModelo, erro);
             carregando.style.display = "flex";
-            carregando.textContent = "NÃ£o foi possÃ­vel carregar " + personagem.classe + ". Confira o caminho do arquivo GLB.";
+            carregando.textContent = "Não foi possível carregar " + personagem.classe + ". Confira o caminho do arquivo GLB.";
         }
     );
 
@@ -1052,6 +1053,9 @@ function iniciarRPG3D(personagem) {
     // ENTRADA (teclado, mouse, toque)
     // =================================================
     const teclas = {};
+    let jogoPausado = false;
+    let botaoPausa = null;
+    let painelPausa = null;
     const joy = { x: 0, y: 0, ativo: false, id: null };
     const gp = { x: 0, y: 0, cx: 0, cy: 0, ativo: false, corre: false, antes: [] };   // controle (gamepad)
     let anguloCamera = 0, alturaCamera = 2.4, distanciaCamera = 4.6;
@@ -1059,8 +1063,10 @@ function iniciarRPG3D(personagem) {
 
     window.addEventListener("keydown", e => {
         const tecla = e.key.toLowerCase();
-        if (e.code === "Space" || e.code.startsWith("Arrow")) e.preventDefault();
+        if (e.code === "Space" || e.code.startsWith("Arrow") || e.code === "Escape") e.preventDefault();
         if (e.repeat) return;
+        if (e.code === "Escape") { alternarPausa(); return; }
+        if (jogoPausado) return;
         teclas[tecla] = true;
         if (e.code === "Space") pular();
         if (tecla === "j") atacar();
@@ -1069,8 +1075,8 @@ function iniciarRPG3D(personagem) {
         if (tecla === "g") alternarPainelConfig();
         if (tecla === "p") alternarAjuda();
         if (tecla === "m") { Som.alternarMudo(); atualizarIconeSom(); }
-        if (tecla === "c") executarAcao("cheer", "ðŸ† " + personagem.classe + " estÃ¡ comemorando!");
-        if (tecla === "v") executarAcao("wave", "ðŸ‘‹ " + personagem.classe + " estÃ¡ acenando!");
+        if (tecla === "c") executarAcao("cheer", "🏆 " + personagem.classe + " está comemorando!");
+        if (tecla === "v") executarAcao("wave", "👋 " + personagem.classe + " está acenando!");
         if (tecla === "t") alternarCamera();
         if (tecla === "[") trocarCenario(numCenario - 1);
         if (tecla === "]") trocarCenario(numCenario + 1);
@@ -1099,7 +1105,7 @@ function iniciarRPG3D(personagem) {
         distanciaCamera = THREE.MathUtils.clamp(distanciaCamera + e.deltaY * 0.01, 3, 14);
     }, { passive: false });
 
-    // cÃ¢mera por toque
+    // câmera por toque
     let toqueCamId = null, toqueX = 0, toqueY = 0;
     renderizador.domElement.addEventListener("touchstart", e => {
         const t = e.changedTouches[0];
@@ -1119,7 +1125,7 @@ function iniciarRPG3D(personagem) {
     renderizador.domElement.addEventListener("touchend", fimToqueCam);
     renderizador.domElement.addEventListener("touchcancel", fimToqueCam);
 
-    // controles de celular (joystick + botÃµes)
+    // controles de celular (joystick + botões)
     function criarControlesMobile() {
         if (!ehToque) return;
         const estilo = document.createElement("style");
@@ -1132,6 +1138,18 @@ function iniciarRPG3D(personagem) {
             #botoesMobile button{height:58px;border-radius:50%;border:2px solid rgba(255,255,255,.35);
                 background:rgba(40,25,10,.65);color:#fff;font-size:22px;touch-action:none}
             #botoesMobile button:active{background:rgba(200,140,40,.8)}
+            @media (max-width: 420px){
+                #joystickBase{left:10px;bottom:max(10px,env(safe-area-inset-bottom));width:106px;height:106px}
+                #joystickKnob{left:31px;top:31px;width:44px;height:44px}
+                #botoesMobile{right:10px;bottom:max(10px,env(safe-area-inset-bottom));grid-template-columns:repeat(3,44px);gap:4px}
+                #botoesMobile button{height:44px;font-size:18px}
+            }
+            @media (max-height: 520px){
+                #joystickBase{width:96px;height:96px;bottom:8px}
+                #joystickKnob{left:27px;top:27px;width:42px;height:42px}
+                #botoesMobile{bottom:8px;gap:4px}
+                #botoesMobile button{height:42px}
+            }
             .controles{display:none!important}
             .botoes-jogo{display:none!important}
         `;
@@ -1144,7 +1162,7 @@ function iniciarRPG3D(personagem) {
         base.appendChild(knob);
         area.appendChild(base);
 
-        const raio = 45;
+        const raio = Math.max(25, Math.min(45, (base.clientWidth - knob.clientWidth) / 2 - 4));
         function moverJoy(t) {
             const r = base.getBoundingClientRect();
             let dx = t.clientX - (r.left + r.width / 2);
@@ -1168,9 +1186,10 @@ function iniciarRPG3D(personagem) {
         const painel = document.createElement("div");
         painel.id = "botoesMobile";
         [
-            ["âš”ï¸", atacar], ["ðŸ”¥", magiaAtaque], ["â¬†ï¸", pular],
-            ["ðŸ§ª", usarPocao], ["ðŸ’¨", () => { teclas.shift = !teclas.shift; }],
-            ["ðŸ“œ", () => { const b = document.getElementById("botaoMenu"); if (b) b.click(); }]
+            ["⚔️", atacar], ["🔥", magiaAtaque], ["⬆️", pular],
+            ["🧪", usarPocao], ["💨", () => { teclas.shift = !teclas.shift; }],
+            ["📜", () => { const b = document.getElementById("botaoMenu"); if (b) b.click(); }],
+            ["⏸️", alternarPausa]
         ].forEach(([icone, fn]) => {
             const b = document.createElement("button");
             b.type = "button";
@@ -1183,13 +1202,13 @@ function iniciarRPG3D(personagem) {
     criarControlesMobile();
     if (ehToque) document.body.style.overscrollBehavior = "none";
 
-    // ---------- CONTROLE (PlayStation / Xbox / genÃ©rico) ----------
-    // AnalÃ³gico esq.: mover | AnalÃ³gico dir.: cÃ¢mera | A(X): pular | X(Quadrado): atacar
-    // Y(TriÃ¢ngulo) ou R1: magia | B(Bolinha) ou L1: poÃ§Ã£o | L2: correr | R2: atacar
-    // Options: ficha | Share: configuraÃ§Ãµes | D-pad cima/baixo: zoom
+    // ---------- CONTROLE (PlayStation / Xbox / genérico) ----------
+    // Analógico esq.: mover | Analógico dir.: câmera | A(X): pular | X(Quadrado): atacar
+    // Y(Triângulo) ou R1: magia | B(Bolinha) ou L1: poção | L2: correr | R2: atacar
+    // Options: ficha | Share: configurações | D-pad cima/baixo: zoom
     const zona = v => Math.abs(v) < 0.2 ? 0 : (v - Math.sign(v) * 0.2) / 0.8;
-    window.addEventListener("gamepadconnected", e => { msg("ðŸŽ® Controle conectado!", 4); });
-    window.addEventListener("gamepaddisconnected", () => { msg("ðŸŽ® Controle desconectado.", 3); });
+    window.addEventListener("gamepadconnected", e => { msg("🎮 Controle conectado!", 4); });
+    window.addEventListener("gamepaddisconnected", () => { msg("🎮 Controle desconectado.", 3); });
 
     function lerControle(delta) {
         const pads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -1258,7 +1277,7 @@ function iniciarRPG3D(personagem) {
 
 
     // =================================================
-    // EFEITOS DE MAGIA: partÃ­culas, runa, domo, pilar, raios, luz, flash e tremor de cÃ¢mera
+    // EFEITOS DE MAGIA: partículas, runa, domo, pilar, raios, luz, flash e tremor de câmera
     // =================================================
     const PALETAS_MAGIA = {
         guerreiro: [0xff6a2a, 0xffc15a, 0xfff2c0], mago: [0x5aa8ff, 0xa78bfa, 0xe8f4ff],
@@ -1271,7 +1290,7 @@ function iniciarRPG3D(personagem) {
     const COR_MAGIA = PALETAS_MAGIA[classeIdentificada] || PALETAS_MAGIA.guerreiro;
     const ADD = THREE.AdditiveBlending;
     const hexCss = h => "#" + new THREE.Color(h).getHexString();
-    const fxq = () => GR.pixel < 1.1 ? 0.4 : GR.pixel < 1.5 ? 0.7 : 1;      // menos partÃ­culas em quality baixa
+    const fxq = () => GR.pixel < 1.1 ? 0.4 : GR.pixel < 1.5 ? 0.7 : 1;      // menos partículas em quality baixa
 
     const texBrilho = (() => {
         const c = document.createElement("canvas"); c.width = c.height = 64;
@@ -1290,7 +1309,7 @@ function iniciarRPG3D(personagem) {
             for (let k = 0; k < 3; k++) { const a = t * Math.PI / 3 + k * 2.0944 - Math.PI / 2; g.lineTo(Math.cos(a) * 226, Math.sin(a) * 226); }
             g.closePath(); g.stroke();
         }
-        for (let k = 0; k < 36; k++) {                      // marcas e runas entre os anÃ©is
+        for (let k = 0; k < 36; k++) {                      // marcas e runas entre os anéis
             const a = k * Math.PI / 18, r1 = 226, r2 = k % 3 ? 236 : 244;
             g.beginPath(); g.moveTo(Math.cos(a) * r1, Math.sin(a) * r1); g.lineTo(Math.cos(a) * r2, Math.sin(a) * r2); g.stroke();
         }
@@ -1302,7 +1321,7 @@ function iniciarRPG3D(personagem) {
         return new THREE.CanvasTexture(c);
     })();
 
-    // sistema de partÃ­culas (um Ãºnico Points, anel de reaproveitamento)
+    // sistema de partículas (um único Points, anel de reaproveitamento)
     const MAX_PART = 1400;
     const PT = {
         n: 0, ativas: 0,
@@ -1359,7 +1378,7 @@ function iniciarRPG3D(personagem) {
         geoPart.attributes.color.needsUpdate = true;
     }
 
-    // objetos temporÃ¡rios animados + agenda de eventos
+    // objetos temporários animados + agenda de eventos
     const fxObjs = [], agenda = [];
     const agendar = (seg, fn) => agenda.push({ t: seg, fn });
     const geoPlano = new THREE.PlaneGeometry(2, 2);
@@ -1402,12 +1421,12 @@ function iniciarRPG3D(personagem) {
         fxObjs.push({ t: 0, dur: 0.32, upd(p) { refazer(); m1.opacity = m2.opacity = 1 - p; }, fim() { cena.remove(l1, l2, l3); geo.dispose(); m1.dispose(); m2.dispose(); } });
     }
 
-    // alvos = [[x, y, z], ...] posiÃ§Ãµes dos inimigos atingidos
+    // alvos = [[x, y, z], ...] posições dos inimigos atingidos
     function efeitoMagia(cores, raio, alvos) {
         const [c1, c2, c3] = cores;
         const hx = heroi.position.x, hy = heroi.position.y, hz = heroi.position.z;
 
-        // 1) cÃ­rculo rÃºnico no chÃ£o (cresce, gira e some)
+        // 1) círculo rúnico no chão (cresce, gira e some)
         const runa = new THREE.Mesh(geoPlano, matAdd(c1, { map: texRuna }));
         runa.rotation.x = -Math.PI / 2; runa.position.set(hx, hy + 0.08, hz); cena.add(runa);
         fxObjs.push({
@@ -1416,7 +1435,7 @@ function iniciarRPG3D(personagem) {
             fim() { cena.remove(runa); runa.material.dispose(); }
         });
 
-        // 2) energia em espiral subindo pelo herÃ³i (carregando a magia)
+        // 2) energia em espiral subindo pelo herói (carregando a magia)
         fxObjs.push({
             t: 0, dur: 0.55,
             upd(p) {
@@ -1429,14 +1448,14 @@ function iniciarRPG3D(personagem) {
             }
         });
 
-        // 3) luz, flash de tela, tremor e zoom de cÃ¢mera
+        // 3) luz, flash de tela, tremor e zoom de câmera
         luzMagia.color.setHex(c1);
         estado.luz = { t: 0, dur: 0.9, pico: 10, x: hx, y: hy + 1.8, z: hz };
         flashTela(c2, 0.5);
         estado.shake = Math.max(estado.shake || 0, 1);
         estado.fov = 9;
 
-        // 4) explosÃ£o (logo apÃ³s a conjuraÃ§Ã£o)
+        // 4) explosão (logo após a conjuração)
         agendar(0.22, () => {
             Som.tocar("acerto");
             efeitoAnel(hx, hz, c1, raio, 0.55);
@@ -1451,12 +1470,12 @@ function iniciarRPG3D(personagem) {
             pilar.position.set(hx, hy + 7, hz); cena.add(pilar);
             fxObjs.push({ t: 0, dur: 0.7, upd(p) { const l = Math.sin(Math.min(1, p * 2.2) * Math.PI / 2); pilar.scale.set(1.5 * (1 - p * 0.7), 14 * l, 1.5 * (1 - p * 0.7)); pilar.material.opacity = 0.55 * (1 - p); }, fim() { cena.remove(pilar); pilar.material.dispose(); } });
 
-            faiscas(hx, hy + 1, hz, 170, raio * 1.5, cores, 1.1, 6);                       // explosÃ£o de faÃ­scas
+            faiscas(hx, hy + 1, hz, 170, raio * 1.5, cores, 1.1, 6);                       // explosão de faíscas
             for (let k = 0, n = Math.round(60 * fxq()); k < n; k++) {                      // coluna de energia subindo
                 const a = Math.random() * 6.2832, r = Math.random() * 1.3;
                 emitir(hx + Math.cos(a) * r, hy + 0.2, hz + Math.sin(a) * r, 0, 9 + Math.random() * 10, 0, 0.9 + Math.random() * 0.5, k % 2 ? c2 : c3, 2, 0.3);
             }
-            for (let k = 0, n = Math.round(60 * fxq()); k < n; k++) {                      // onda de poeira no chÃ£o
+            for (let k = 0, n = Math.round(60 * fxq()); k < n; k++) {                      // onda de poeira no chão
                 const a = Math.random() * 6.2832, v = raio * (1 + Math.random() * 0.6);
                 emitir(hx, hy + 0.2, hz, Math.cos(a) * v, 0.6 + Math.random(), Math.sin(a) * v, 0.8, c3, 1, 2.2);
             }
@@ -1471,7 +1490,7 @@ function iniciarRPG3D(personagem) {
                 }
             });
 
-            // raios ligando o herÃ³i a cada inimigo atingido + faÃ­scas e anel em cada alvo
+            // raios ligando o herói a cada inimigo atingido + faíscas e anel em cada alvo
             alvos.slice(0, 8).forEach((a, k) => agendar(k * 0.04, () => raioEletrico(hx, hy + 1.6, hz, a[0], a[1] + 1.2, a[2], c1)));
             alvos.slice(0, 24).forEach(a => {
                 faiscas(a[0], a[1] + 1.2, a[2], 22, 6, cores, 0.8, 8);
@@ -1500,7 +1519,7 @@ function iniciarRPG3D(personagem) {
             fim() { cena.remove(g); m.material.dispose(); }
         });
         const n = Math.max(4, Math.round((final ? 28 : 14) * fxq()));
-        for (let k = 0; k < n; k++) {                              // faÃ­scas ao longo da trajetÃ³ria da lÃ¢mina
+        for (let k = 0; k < n; k++) {                              // faíscas ao longo da trajetória da lâmina
             const t = k / n, a = (-1 + 2 * t) * dir * 1.1, r = 1.8;
             emitir(hx + Math.sin(ry + a) * r, hy + 1.0 + (passo === 1 ? 0.6 - 0.9 * t : 0.9 * t), hz + Math.cos(ry + a) * r,
                 Math.sin(ry + a) * 2.2, 0.6, Math.cos(ry + a) * 2.2, 0.35, k % 3 ? cor : 0xffffff, 0, 2);
@@ -1512,7 +1531,7 @@ function iniciarRPG3D(personagem) {
             faiscas(hx + Math.sin(ry) * 2, hy + 1, hz + Math.cos(ry) * 2, 40, 6, COR_MAGIA, 0.7, 7);
         }
     }
-    function atualizarAvanco(delta) {                              // o herÃ³i dÃ¡ um passo Ã  frente a cada golpe
+    function atualizarAvanco(delta) {                              // o herói dá um passo à frente a cada golpe
         const a = estado.avanco;
         if (!a) return;
         a.t += delta;
@@ -1636,7 +1655,7 @@ function iniciarRPG3D(personagem) {
 
     function atualizarSpawns(delta) {
         // Sistema antigo de Slimes e Goblins desativado.
-        // Os inimigos agora pertencem exclusivamente ÃƒÂ  horda GLB.
+        // Os inimigos agora pertencem exclusivamente à horda GLB.
         return;
     }
 
@@ -1670,14 +1689,14 @@ function iniciarRPG3D(personagem) {
             if (it.tipo === "vida") {
                 if (personagem.pocoes < MAX_POCOES) {
                     personagem.pocoes++;
-                    msg("ðŸ§ª PoÃ§Ã£o de cura guardada! (tecla F para usar)");
+                    msg("🧪 Poção de cura guardada! (tecla F para usar)");
                 } else {
                     personagem.hp = Math.min(personagem.hpMax, personagem.hp + 30);
-                    msg("â¤ï¸ Mochila cheia: poÃ§Ã£o bebida na hora, +30");
+                    msg("❤️ Mochila cheia: poção bebida na hora, +30");
                 }
             } else {
                 personagem.mp = Math.min(personagem.mpMax, personagem.mp + 25);
-                msg("ðŸ”® PoÃ§Ã£o de mana: +25");
+                msg("🔮 Poção de mana: +25");
             }
             Som.tocar("item");
             cena.remove(it.malha);
@@ -1714,7 +1733,7 @@ function iniciarRPG3D(personagem) {
         const sorte = Math.random();
         if (sorte < 0.3) criarItem("vida", px, pz);
         else if (sorte < 0.45) criarItem("mana", px, pz);
-        msg("ðŸ’€ " + e.nome + " derrotado! +" + ouro + " ðŸª™");
+        msg("💀 " + e.nome + " derrotado! +" + ouro + " 🪙");
         Som.tocar("morte");
         efeitoAnel(px, pz, 0xffaa44, 2.5, 0.4);
         removerInimigo(idx);
@@ -1731,13 +1750,13 @@ function iniciarRPG3D(personagem) {
             personagem.mpMax += 5;
             personagem.hp = personagem.hpMax;
             personagem.mp = personagem.mpMax;
-            msg("â­ Subiu para o nÃ­vel " + personagem.nivel + "!", 4);
+            msg("⭐ Subiu para o nível " + personagem.nivel + "!", 4);
             Som.tocar("nivel");
             efeitoAnel(heroi.position.x, heroi.position.z, 0xffe066, 6, 0.8);
         }
     }
 
-    // combo de 3 golpes: dois rÃ¡pidos e um final mais forte; o herÃ³i avanÃ§a, gira para o inimigo mais perto e deixa um arco de energia
+    // combo de 3 golpes: dois rápidos e um final mais forte; o herói avança, gira para o inimigo mais perto e deixa um arco de energia
     function atacar() {
         if (estado.recargaAtaque > 0) return;
         const agora = relogio.elapsedTime;
@@ -1764,7 +1783,7 @@ function iniciarRPG3D(personagem) {
             if (d < (final ? 5 : 4) && (dx * fx + dz * fz) / (d || 1) > -0.2) { danoNoInimigo(e, dano); acertou++; }
         }
         acertou += hordaGolpe(dano, final ? 5 : 4, fx, fz, final ? 10 : 6, final);
-        msg(acertou ? (final ? "ðŸ’¥ Golpe final! Dano: " : "âš”ï¸ Golpe! Dano: ") + dano : "âš”ï¸ " + personagem.classe + " ataca!");
+        msg(acertou ? (final ? "💥 Golpe final! Dano: " : "⚔️ Golpe! Dano: ") + dano : "⚔️ " + personagem.classe + " ataca!");
     }
 
     function magiaAtaque() {
@@ -1784,7 +1803,7 @@ function iniciarRPG3D(personagem) {
         n += hordaArea(dano, 9, 40);
         for (const a of ultimosAlvos) alvosFx.push(a);
         efeitoMagia(COR_MAGIA, 9, alvosFx);
-        msg("ðŸ”¥ Magia! " + n + " alvo(s), dano " + dano);
+        msg("🔥 Magia! " + n + " alvo(s), dano " + dano);
         atualizarInterface();
     }
 
@@ -1796,13 +1815,13 @@ function iniciarRPG3D(personagem) {
         estado.semDano = 0;
         estado.shake = Math.max(estado.shake || 0, 0.35);
         Som.tocar("dano");
-        msg("ðŸ’¥ VocÃª sofreu " + valor + " de dano! (F = poÃ§Ã£o)", 1.5);
+        msg("💥 Você sofreu " + valor + " de dano! (F = poção)", 1.5);
         atualizarInterface();
         if (personagem.hp <= 0) morrer();
     }
 
     function morrer() {
-        msg("â˜ ï¸ VocÃª caiu! Perdeu metade do ouro e voltou ao inÃ­cio.", 5);
+        msg("â˜ ️ Você caiu! Perdeu metade do ouro e voltou ao início.", 5);
         personagem.ouro = Math.floor(personagem.ouro / 2);
         personagem.hp = personagem.hpMax;
         personagem.mp = personagem.mpMax;
@@ -1813,25 +1832,25 @@ function iniciarRPG3D(personagem) {
         atualizarInterface();
     }
 
-    // ---------- poÃ§Ã£o de cura ----------
+    // ---------- poção de cura ----------
     function usarPocao() {
         if (estado.recargaPocao > 0) return;
-        if (personagem.pocoes <= 0) { msg("ðŸ§ª Sem poÃ§Ãµes de cura! Derrote inimigos ou ache poÃ§Ãµes vermelhas."); Som.tocar("erro"); return; }
-        if (personagem.hp >= personagem.hpMax) { msg("Vida jÃ¡ estÃ¡ cheia."); Som.tocar("erro"); return; }
+        if (personagem.pocoes <= 0) { msg("🧪 Sem poções de cura! Derrote inimigos ou ache poções vermelhas."); Som.tocar("erro"); return; }
+        if (personagem.hp >= personagem.hpMax) { msg("Vida já está cheia."); Som.tocar("erro"); return; }
         personagem.pocoes--;
         estado.recargaPocao = RECARGA_POCAO;
         const cura = Math.round(personagem.hpMax * 0.5);
         personagem.hp = Math.min(personagem.hpMax, personagem.hp + cura);
         efeitoAnel(heroi.position.x, heroi.position.z, 0xff6b6b, 4, 0.6);
         Som.tocar("pocao");
-        msg("ðŸ§ª PoÃ§Ã£o de cura: +" + cura + " de vida (" + personagem.pocoes + " restantes)");
+        msg("🧪 Poção de cura: +" + cura + " de vida (" + personagem.pocoes + " restantes)");
         atualizarInterface();
         atualizarPocoes();
         salvarPersonagem();
     }
 
     // =================================================
-    // AÃ‡Ã•ES / ANIMAÃ‡Ã•ES ESPECIAIS
+    // AÇÕES / ANIMAÇÕES ESPECIAIS
     // =================================================
     function movimentoAtual() {
         let dx = (teclas.a || teclas.arrowleft ? 1 : 0) - (teclas.d || teclas.arrowright ? 1 : 0);
@@ -1866,7 +1885,7 @@ function iniciarRPG3D(personagem) {
     function executarAcao(nome, mensagem) {
         if (atacando) return;
         if (executarAnim(nome)) msg(mensagem);
-        else msg("AnimaÃ§Ã£o nÃ£o disponÃ­vel neste modelo.");
+        else msg("Animação não disponível neste modelo.");
     }
 
     function pular() {
@@ -1879,7 +1898,7 @@ function iniciarRPG3D(personagem) {
     }
 
     // =================================================
-    // MOVIMENTO E COLISÃƒO
+    // MOVIMENTO E COLISÃO
     // =================================================
     function resolverColisoes() {
         const lista = [obstaculosFixos, obstaculosCenario];
@@ -1936,7 +1955,7 @@ function iniciarRPG3D(personagem) {
                 for (let a = 0; a < 8 && !saida; a++) {
                     saida = podeAndar(heroi.position.x + Math.cos(a * 0.785) * 0.7, heroi.position.z + Math.sin(a * 0.785) * 0.7);
                 }
-                if (!saida) { estado.livre = 1.5; msg("ðŸ’¨ VocÃª estava preso: saindo do obstÃ¡culo...", 2); }   // sÃ³ se estiver cercado de verdade
+                if (!saida) { estado.livre = 1.5; msg("💨 Você estava preso: saindo do obstáculo...", 2); }   // só se estiver cercado de verdade
             }
 
             if (!noAr) {
@@ -2004,29 +2023,29 @@ function iniciarRPG3D(personagem) {
     }
 
     // =================================================
-    // CÃ‚MERA
+    // CÂMERA
     // =================================================
     const _foco = new THREE.Vector3(), _alvoCam = new THREE.Vector3();
     function alternarCamera() {
         estado.camModo = estado.camModo === 1 ? 0 : 1;
         if (estado.camModo !== 1 && modelo3D) modelo3D.visible = true;
-        msg(estado.camModo === 1 ? "ðŸ‘ï¸ CÃ¢mera em 1Âª pessoa (T volta)" : "ðŸŽ¥ CÃ¢mera atrÃ¡s do personagem (T = 1Âª pessoa)", 2.5);
+        msg(estado.camModo === 1 ? "👁️ Câmera em 1ª pessoa (T volta)" : "🎥 Câmera atrás do personagem (T = 1ª pessoa)", 2.5);
     }
     function atualizarCamera(delta) {
         const d = delta || 0.016;
         const sx = Math.sin(anguloCamera), cz = Math.cos(anguloCamera);
         let fovBase = 65;
         if (estado.camModo === 1) {
-            // 1Âª pessoa: a cÃ¢mera fica na cabeÃ§a do personagem
+            // 1ª pessoa: a câmera fica na cabeça do personagem
             if (modelo3D && modelo3D.visible) modelo3D.visible = false;
             fovBase = 75;
             camera.position.set(heroi.position.x + sx * 0.3, heroi.position.y + 1.7, heroi.position.z + cz * 0.3);
             const pitch = THREE.MathUtils.clamp((3.2 - alturaCamera) * 0.25, -1.0, 0.8);
             _foco.set(camera.position.x + sx * 6, camera.position.y + Math.tan(pitch) * 6, camera.position.z + cz * 6);
         } else {
-            // atrÃ¡s do ombro: colada no personagem, sempre olhando para ele
+            // atrás do ombro: colada no personagem, sempre olhando para ele
             if (modelo3D && !modelo3D.visible) modelo3D.visible = true;
-            const rx = cz, rz = -sx;                                  // lado direito da cÃ¢mera
+            const rx = cz, rz = -sx;                                  // lado direito da câmera
             _alvoCam.set(
                 heroi.position.x - sx * distanciaCamera + rx * 0.55,
                 heroi.position.y + alturaCamera,
@@ -2049,7 +2068,7 @@ function iniciarRPG3D(personagem) {
     }
 
     // =================================================
-    // INTERFACE: barras, poÃ§Ãµes, ficha
+    // INTERFACE: barras, poções, ficha
     // =================================================
     const hud = {};   // HUD compacto (montado logo abaixo)
     function atualizarInterface() {
@@ -2063,24 +2082,24 @@ function iniciarRPG3D(personagem) {
         texto("vidaTexto", `${Math.round(personagem.hp)}/${personagem.hpMax}`);
         texto("manaTexto", `${Math.round(personagem.mp)}/${personagem.mpMax}`);
         texto("xpTexto", `${personagem.xp}/${personagem.xpProximoNivel}`);
-        texto("nivelHero", `â­ NÃ­vel ${personagem.nivel}`);
-        texto("ouroHero", `ðŸª™ ${personagem.ouro}`);
+        texto("nivelHero", `⭐ Nível ${personagem.nivel}`);
+        texto("ouroHero", `🪙 ${personagem.ouro}`);
         barra("barraVida", personagem.hp, personagem.hpMax);
         barra("barraMana", personagem.mp, personagem.mpMax);
         barra("barraXP", personagem.xp, personagem.xpProximoNivel);
         if (hud.vida) {
             const pct = (v, max) => (max > 0 ? THREE.MathUtils.clamp(v / max * 100, 0, 100) : 0) + "%";
-            hud.nome.textContent = personagem.nome + " Â· Nv " + personagem.nivel + "   ðŸª™ " + personagem.ouro + "   ðŸ’€ " + (personagem.abates || 0);
+            hud.nome.textContent = personagem.nome + " · Nv " + personagem.nivel + "   🪙 " + personagem.ouro + "   💀 " + (personagem.abates || 0);
             hud.vida.style.width = pct(personagem.hp, personagem.hpMax);
-            hud.vidaT.textContent = "â¤ï¸ " + Math.round(personagem.hp) + "/" + personagem.hpMax;
+            hud.vidaT.textContent = "❤️ " + Math.round(personagem.hp) + "/" + personagem.hpMax;
             hud.mana.style.width = pct(personagem.mp, personagem.mpMax);
-            hud.manaT.textContent = "ðŸ”® " + Math.round(personagem.mp) + "/" + personagem.mpMax;
+            hud.manaT.textContent = "🔮 " + Math.round(personagem.mp) + "/" + personagem.mpMax;
             hud.xp.style.width = pct(personagem.xp, personagem.xpProximoNivel);
         }
     }
     atualizarInterface();
 
-    // barra de poÃ§Ãµes (topo, centro)
+    // barra de poções (topo, centro)
     const hudPocao = document.createElement("div");
     hudPocao.style.cssText = "position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:15;" +
         "display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;" +
@@ -2090,7 +2109,7 @@ function iniciarRPG3D(personagem) {
     const slots = [];
     for (let k = 0; k < MAX_POCOES; k++) {
         const s = document.createElement("span");
-        s.textContent = "ðŸ§ª";
+        s.textContent = "🧪";
         s.style.cssText = "font-size:22px;transition:opacity .2s,filter .2s";
         linhaSlots.appendChild(s);
         slots.push(s);
@@ -2153,7 +2172,7 @@ function iniciarRPG3D(personagem) {
     area.appendChild(hudBox);
     atualizarInterface();
 
-    // ficha do herÃ³i
+    // ficha do herói
     const botaoMenu = document.getElementById("botaoMenu");
     const ficha = document.getElementById("ficha");
     const fecharFicha = document.getElementById("fecharFicha");
@@ -2165,12 +2184,12 @@ function iniciarRPG3D(personagem) {
             if (dados) {
                 dados.replaceChildren();
                 [
-                    ["Nome", personagem.nome], ["Classe", personagem.classe], ["NÃ­vel", personagem.nivel],
+                    ["Nome", personagem.nome], ["Classe", personagem.classe], ["Nível", personagem.nivel],
                     ["Ataque", personagem.ataque ?? personagem.forca ?? 0], ["Defesa", personagem.defesa ?? 0],
                     ["Agilidade", personagem.agilidade ?? 0],
                     ["Vida", `${Math.round(personagem.hp)}/${personagem.hpMax}`],
                     ["Mana", `${Math.round(personagem.mp)}/${personagem.mpMax}`],
-                    ["CenÃ¡rio", dadosCenario ? dadosCenario.nome : "Eldoria"], ["PoÃ§Ãµes de cura", `${personagem.pocoes}/${MAX_POCOES}`], ["Ouro", personagem.ouro]
+                    ["Cenário", dadosCenario ? dadosCenario.nome : "Eldoria"], ["Poções de cura", `${personagem.pocoes}/${MAX_POCOES}`], ["Ouro", personagem.ouro]
                 ].forEach(([t, v]) => {
                     const p = document.createElement("p");
                     p.textContent = `${t}: ${v}`;
@@ -2184,12 +2203,12 @@ function iniciarRPG3D(personagem) {
                 if (lista.length) {
                     lista.forEach(item => {
                         const p = document.createElement("p");
-                        p.textContent = `ðŸŽ’ ${item.nome || item.item || "Item"} x${item.quantidade ?? 1}`;
+                        p.textContent = `🎒 ${item.nome || item.item || "Item"} x${item.quantidade ?? 1}`;
                         inv.appendChild(p);
                     });
                 } else {
                     const p = document.createElement("p");
-                    p.textContent = "InventÃ¡rio vazio";
+                    p.textContent = "Inventário vazio";
                     inv.appendChild(p);
                 }
             }
@@ -2203,7 +2222,7 @@ function iniciarRPG3D(personagem) {
     if (botaoAtaque) botaoAtaque.onclick = atacar;
 
     // =================================================
-    // PAINEL DE CONFIGURAÃ‡Ã•ES: grÃ¡ficos + som (tecla G)
+    // PAINEL DE CONFIGURAÇÕES: gráficos + som (tecla G)
     // =================================================
     function botaoTopo(texto, direita, aoClicar) {
         const b = document.createElement("button");
@@ -2215,9 +2234,54 @@ function iniciarRPG3D(personagem) {
         area.appendChild(b);
         return b;
     }
-    const botaoSom = botaoTopo(Som.mudo() ? "ðŸ”‡" : "ðŸ”Š", 60, () => { Som.alternarMudo(); atualizarIconeSom(); Som.tocar("clique"); });
-    botaoTopo("âš™ï¸", 12, () => alternarPainelConfig());
-    botaoTopo("â›¶", 108, () => {
+
+    // Pausa real: congela movimento, inimigos, animações e temporizadores.
+    botaoPausa = botaoTopo("⏸", 204, alternarPausa);
+    botaoPausa.title = "Pausar jogo (Esc)";
+    botaoPausa.setAttribute("aria-label", "Pausar jogo");
+
+    painelPausa = document.createElement("div");
+    painelPausa.style.cssText =
+        "position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;" +
+        "display:none;width:min(340px,90%);box-sizing:border-box;padding:24px 18px;text-align:center;" +
+        "border:2px solid rgba(255,220,150,.85);border-radius:16px;background:rgba(18,12,8,.94);" +
+        "color:#fff;font:700 18px sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.55)";
+    const tituloPausa = document.createElement("div");
+    tituloPausa.textContent = "⏸ Jogo pausado";
+    const textoPausa = document.createElement("div");
+    textoPausa.textContent = "O mundo está parado. Continue quando estiver pronto.";
+    textoPausa.style.cssText = "font-size:13px;font-weight:400;line-height:1.5;margin:10px 0 16px";
+    const continuarPausa = document.createElement("button");
+    continuarPausa.type = "button";
+    continuarPausa.textContent = "▶ Continuar jogo";
+    continuarPausa.style.cssText =
+        "width:100%;min-height:44px;padding:10px 16px;border:0;border-radius:9px;" +
+        "background:#c8892a;color:#fff;font-weight:700;font-size:15px;cursor:pointer";
+    continuarPausa.addEventListener("click", alternarPausa);
+    painelPausa.append(tituloPausa, textoPausa, continuarPausa);
+    area.appendChild(painelPausa);
+
+    function alternarPausa() {
+        jogoPausado = !jogoPausado;
+        if (painelPausa) painelPausa.style.display = jogoPausado ? "block" : "none";
+        if (botaoPausa) {
+            botaoPausa.textContent = jogoPausado ? "▶" : "⏸";
+            botaoPausa.title = jogoPausado ? "Continuar jogo (Esc)" : "Pausar jogo (Esc)";
+            botaoPausa.setAttribute("aria-label", botaoPausa.title);
+        }
+        if (jogoPausado) {
+            Object.keys(teclas).forEach(k => { teclas[k] = false; });
+            joy.x = 0; joy.y = 0; joy.ativo = false; joy.id = null;
+            gp.x = gp.y = gp.cx = gp.cy = 0;
+            gp.ativo = false; gp.corre = false;
+            const knob = document.getElementById("joystickKnob");
+            if (knob) knob.style.transform = "translate(0,0)";
+        }
+    }
+
+    const botaoSom = botaoTopo(Som.mudo() ? "🔇" : "🔊", 60, () => { Som.alternarMudo(); atualizarIconeSom(); Som.tocar("clique"); });
+    botaoTopo("⚙️", 12, () => alternarPainelConfig());
+    botaoTopo("⛶", 108, () => {
         const el = document.documentElement;
         if (document.fullscreenElement || document.webkitFullscreenElement) {
             (document.exitFullscreen || document.webkitExitFullscreen).call(document);
@@ -2226,23 +2290,23 @@ function iniciarRPG3D(personagem) {
             if (f) f.call(el);
         }
     });
-    function atualizarIconeSom() { botaoSom.textContent = Som.mudo() ? "ðŸ”‡" : "ðŸ”Š"; }
+    function atualizarIconeSom() { botaoSom.textContent = Som.mudo() ? "🔇" : "🔊"; }
 
-    // ---------- AJUDA (botÃ£o â“ ou tecla P) ----------
+    // ---------- AJUDA (botão ❓ ou tecla P) ----------
     const painelAjuda = document.createElement("div");
     painelAjuda.style.cssText = "position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:40;display:none;" +
         "width:min(380px,92%);max-height:88%;overflow:auto;padding:16px;border-radius:14px;box-sizing:border-box;" +
         "background:rgba(24,16,9,.94);border:2px solid rgba(255,220,150,.7);color:#fff;font:14px sans-serif;line-height:1.6";
     [
-        "â“ Controles",
-        "W A S D / setas â€” Mover  Â·  Shift â€” Correr",
-        "EspaÃ§o â€” Pular (duplo)",
-        "J â€” Atacar  Â·  K â€” Magia (20 de mana)",
-        "F â€” PoÃ§Ã£o de cura  Â·  C / V â€” Comemorar / Acenar",
-        "Mouse (arrastar) â€” CÃ¢mera  Â·  Roda â€” Zoom",
-        "G â€” GrÃ¡ficos e som  Â·  M â€” Mudo  Â·  P â€” Esta ajuda",
-        "ðŸŽ® Controle: analÃ³gico esq. mover Â· dir. cÃ¢mera Â· A/X pular Â· X/â–¡ atacar Â· Y/â–³ magia Â· B/â—‹ poÃ§Ã£o Â· L2 correr",
-        "ðŸ“± Celular: joystick e botÃµes na tela"
+        "❓ Controles",
+        "W A S D / setas — Mover  ·  Shift — Correr",
+        "Espaço — Pular (duplo)",
+        "J — Atacar  ·  K — Magia (20 de mana)",
+        "F — Poção de cura  ·  C / V — Comemorar / Acenar",
+        "Mouse (arrastar) — Câmera  ·  Roda — Zoom",
+        "G — Gráficos e som  ·  M — Mudo  ·  P — Esta ajuda",
+        "🎮 Controle: analógico esq. mover · dir. câmera · A/X pular · X/□ atacar · Y/△ magia · B/○ poção · L2 correr",
+        "📱 Celular: joystick e botões na tela"
     ].forEach((t, i) => {
         const d = document.createElement("div");
         d.textContent = t;
@@ -2257,11 +2321,11 @@ function iniciarRPG3D(personagem) {
     painelAjuda.appendChild(fecharAjuda);
     area.appendChild(painelAjuda);
     function alternarAjuda() { painelAjuda.style.display = painelAjuda.style.display === "none" ? "block" : "none"; }
-    botaoTopo("â“", 156, () => alternarAjuda());
+    botaoTopo("❓", 156, () => alternarAjuda());
 
-    // aviso atÃ© o navegador liberar o Ã¡udio (precisa de um clique/toque)
+    // aviso até o navegador liberar o áudio (precisa de um clique/toque)
     const avisoSom = document.createElement("div");
-    avisoSom.textContent = "ðŸ”Š Clique ou toque na tela para ativar o som";
+    avisoSom.textContent = "🔊 Clique ou toque na tela para ativar o som";
     avisoSom.style.cssText = "position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:30;padding:6px 14px;" +
         "border-radius:16px;background:rgba(0,0,0,.65);color:#fff;font:700 13px sans-serif;pointer-events:none;white-space:nowrap";
     area.appendChild(avisoSom);
@@ -2295,7 +2359,7 @@ function iniciarRPG3D(personagem) {
             botoesDif[k].style.background = ativo ? "#c8892a" : "rgba(255,255,255,.1)";
             botoesDif[k].style.borderColor = ativo ? "#ffd98a" : "rgba(255,255,255,.3)";
         }
-        if (rotuloCen) rotuloCen.textContent = "CenÃ¡rio " + numCenario + "/" + NUM_CENARIOS + " Â· " + tema.clima;
+        if (rotuloCen) rotuloCen.textContent = "Cenário " + numCenario + "/" + NUM_CENARIOS + " · " + tema.clima;
     }
     function slider(rotulo, valor, aoMudar) {
         const linha = document.createElement("label");
@@ -2312,11 +2376,11 @@ function iniciarRPG3D(personagem) {
     }
 
     const tituloPainel = document.createElement("div");
-    tituloPainel.textContent = "âš™ï¸ ConfiguraÃ§Ãµes";
+    tituloPainel.textContent = "⚙️ Configurações";
     tituloPainel.style.cssText = "font-size:18px;font-weight:700";
     painelCfg.appendChild(tituloPainel);
 
-    painelCfg.appendChild(titulo("ðŸ–¥ï¸ Qualidade grÃ¡fica"));
+    painelCfg.appendChild(titulo("🖥️ Qualidade gráfica"));
     const gradeGraf = document.createElement("div");
     gradeGraf.style.cssText = "display:grid;grid-template-columns:repeat(4,1fr);gap:6px";
     Object.keys(PRESETS).forEach(k => {
@@ -2330,11 +2394,11 @@ function iniciarRPG3D(personagem) {
     });
     painelCfg.appendChild(gradeGraf);
     const dica = document.createElement("div");
-    dica.textContent = "Se o jogo estiver lento, escolha Baixo ou MÃ©dio.";
+    dica.textContent = "Se o jogo estiver lento, escolha Baixo ou Médio.";
     dica.style.cssText = "font-size:12px;opacity:.7;margin-top:6px";
     painelCfg.appendChild(dica);
 
-    painelCfg.appendChild(titulo("âš”ï¸ Dificuldade"));
+    painelCfg.appendChild(titulo("⚔️ Dificuldade"));
     const gradeDif = document.createElement("div");
     gradeDif.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:6px";
     Object.keys(DIFICULDADES).forEach(k => {
@@ -2348,11 +2412,11 @@ function iniciarRPG3D(personagem) {
     });
     painelCfg.appendChild(gradeDif);
     const dicaDif = document.createElement("div");
-    dicaDif.textContent = "Quanto maior o nÃ­vel do herÃ³i, mais forte o dano dos inimigos.";
+    dicaDif.textContent = "Quanto maior o nível do herói, mais forte o dano dos inimigos.";
     dicaDif.style.cssText = "font-size:12px;opacity:.7;margin-top:6px";
     painelCfg.appendChild(dicaDif);
 
-    painelCfg.appendChild(titulo("ðŸ—ºï¸ CenÃ¡rio (100 por personagem)"));
+    painelCfg.appendChild(titulo("🗺️ Cenário (100 por personagem)"));
     const linhaCen = document.createElement("div");
     linhaCen.style.cssText = "display:flex;align-items:center;gap:6px";
     const botaoCen = (txt, fn) => {
@@ -2364,10 +2428,10 @@ function iniciarRPG3D(personagem) {
     };
     rotuloCen = document.createElement("div");
     rotuloCen.style.cssText = "flex:1;text-align:center;font-size:13px";
-    linhaCen.append(botaoCen("â—€", () => trocarCenario(numCenario - 1)), rotuloCen, botaoCen("â–¶", () => trocarCenario(numCenario + 1)), botaoCen("ðŸŽ²", () => trocarCenario(1 + Math.floor(Math.random() * NUM_CENARIOS))));
+    linhaCen.append(botaoCen("◀", () => trocarCenario(numCenario - 1)), rotuloCen, botaoCen("▶", () => trocarCenario(numCenario + 1)), botaoCen("🎲", () => trocarCenario(1 + Math.floor(Math.random() * NUM_CENARIOS))));
     painelCfg.appendChild(linhaCen);
     const dicaCen = document.createElement("div");
-    dicaCen.textContent = "Atalhos: [ e ] trocam o cenÃ¡rio Â· T troca a cÃ¢mera.";
+    dicaCen.textContent = "Atalhos: [ e ] trocam o cenário · T troca a câmera.";
     dicaCen.style.cssText = "font-size:12px;opacity:.7;margin-top:6px";
     painelCfg.appendChild(dicaCen);
 
@@ -2384,20 +2448,20 @@ function iniciarRPG3D(personagem) {
     linhaFps.append(chkFps, document.createTextNode("Mostrar FPS"));
     painelCfg.appendChild(linhaFps);
 
-    painelCfg.appendChild(titulo("ðŸ”Š Som"));
+    painelCfg.appendChild(titulo("🔊 Som"));
     const sv = Som.obter();
     painelCfg.appendChild(slider("Geral", sv.mestre, v => Som.definir("mestre", v)));
-    painelCfg.appendChild(slider("MÃºsica", sv.musica, v => Som.definir("musica", v)));
+    painelCfg.appendChild(slider("Música", sv.musica, v => Som.definir("musica", v)));
     const btnMudo = document.createElement("button");
     btnMudo.type = "button";
     btnMudo.style.cssText = "margin-top:8px;padding:8px 12px;border-radius:8px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer";
-    const textoMudo = () => { btnMudo.textContent = Som.mudo() ? "ðŸ”‡ Som desligado (M)" : "ðŸ”Š Som ligado (M)"; };
+    const textoMudo = () => { btnMudo.textContent = Som.mudo() ? "🔇 Som desligado (M)" : "🔊 Som ligado (M)"; };
     textoMudo();
     btnMudo.addEventListener("click", () => { Som.alternarMudo(); textoMudo(); atualizarIconeSom(); });
     painelCfg.appendChild(btnMudo);
     const btnTeste = document.createElement("button");
     btnTeste.type = "button";
-    btnTeste.textContent = "ðŸ”” Testar som";
+    btnTeste.textContent = "🔔 Testar som";
     btnTeste.style.cssText = "margin:8px 0 0 8px;padding:8px 12px;border-radius:8px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer";
     btnTeste.addEventListener("click", () => { Som.iniciar(); Som.tocar("nivel"); });
     painelCfg.appendChild(btnTeste);
@@ -2417,12 +2481,12 @@ function iniciarRPG3D(personagem) {
 
     // =================================================
     // HORDA: milhares de inimigos clonados dos modelos .glb
-    //  - perto do herÃ³i: clones 3D com esqueleto e animaÃ§Ã£o (quantidade limitada)
-    //  - longe: bonecos simples em instÃ¢ncias (milhares quase de graÃ§a)
+    //  - perto do herói: clones 3D com esqueleto e animação (quantidade limitada)
+    //  - longe: bonecos simples em instâncias (milhares quase de graça)
     // =================================================
     const TIPOS_HORDA = [
-        { id: "armoured-dwarf",    nome: "AnÃ£o Blindado",      alt: 2.2, vel: 2.6, dano: 4,  hp: 80,  xp: 1.2, cor: 0xa9afc0, peso: 30 },
-        { id: "dwarf-smith",       nome: "AnÃ£o Ferreiro",      alt: 2.1, vel: 2.9, dano: 5,  hp: 60,  xp: 1.1, cor: 0xb5651d, peso: 25 },
+        { id: "armoured-dwarf",    nome: "Anão Blindado",      alt: 2.2, vel: 2.6, dano: 4,  hp: 80,  xp: 1.2, cor: 0xa9afc0, peso: 30 },
+        { id: "dwarf-smith",       nome: "Anão Ferreiro",      alt: 2.1, vel: 2.9, dano: 5,  hp: 60,  xp: 1.1, cor: 0xb5651d, peso: 25 },
         { id: "fur-coat-wanderer", nome: "Andarilho",          alt: 2.5, vel: 3.5, dano: 3,  hp: 40,  xp: 0.9, cor: 0x9a7b52, peso: 25 },
         { id: "gnoll-warrior",     nome: "Gnoll",              alt: 2.6, vel: 3.3, dano: 4,  hp: 50,  xp: 1.0, cor: 0x8a9a3a, peso: 17 },
         { id: "heroic-warrior",    nome: "Guerreiro Heroico",  alt: 3.4, vel: 2.8, dano: 9,  hp: 200, xp: 5.0, cor: 0xd04040, peso: 3, elite: true }
@@ -2433,6 +2497,21 @@ function iniciarRPG3D(personagem) {
     let hordaFig = null, geoFigura = null;
     const slotsH = [];
     const modelosH = {};
+
+// Pasta exclusiva de monstros de cada classe.
+// O Guerreiro mantém os 100 GLBs que já existem.
+const PASTAS_MONSTROS_CLASSE = {
+    guerreiro: "modelos/monstros",
+    mago: "modelos/monstros-mago",
+    arqueiro: "modelos/monstros-arqueiro",
+    paladino: "modelos/monstros-paladino",
+    assassino: "modelos/monstros-assassino",
+    druida: "modelos/monstros-druida",
+    necromante: "modelos/monstros-necromante",
+    barbaro: "modelos/monstros-barbaro",
+    monge: "modelos/monstros-monge",
+    cavaleirorunico: "modelos/monstros-cavaleiro-runico"
+};
     const GRUPOS_MONSTROS_100 = [
         "orc", "undead", "demon", "beast", "troll",
         "golem", "insect", "dragonkin", "specter", "cultist"
@@ -2469,6 +2548,7 @@ function iniciarRPG3D(personagem) {
 
         filaModelosH.push({
             chave: chave,
+            pasta: PASTAS_MONSTROS_CLASSE[classeIdentificada] || "modelos/monstros",
             arquivo: arquivoModeloH(indice)
         });
 
@@ -2485,7 +2565,7 @@ function iniciarRPG3D(personagem) {
             cargasAtivasH++;
 
             new THREE.GLTFLoader().load(
-                "modelos/monstros/" + item.arquivo,
+                item.pasta + "/" + item.arquivo,
 
                 gltf => {
                     try {
@@ -2638,7 +2718,7 @@ function iniciarRPG3D(personagem) {
         H.n = criados;
         if (!H.n) return;
 
-        // Sem bonecos genÃƒÂ©ricos: somente modelos GLB carregados.
+        // Sem bonecos genéricos: somente modelos GLB carregados.
         hordaFig = null;
 
         for (let k = 0; k < (GR.slots || 0); k++) {
@@ -2695,19 +2775,19 @@ function iniciarRPG3D(personagem) {
             if (ts) sl.ts[chave] = ts;
             return true;
         };
-        const soWave = !clipe("idle") && clipe("wave");                      // o gnoll sÃ³ tem "wave": reaproveita acelerado
+        const soWave = !clipe("idle") && clipe("wave");                      // o gnoll só tem "wave": reaproveita acelerado
         reg("parado", clipe("idle", "fightstance", "wave", "parado"));
         reg("andar", clipe("walk", "andar", "run", "correr"), false) || reg("andar", clipe("wave"), false, 1.7);
         reg("correr", clipe("run", "correr", "walk", "andar"), false) || reg("correr", clipe("wave"), false, 2.6);
-        // vÃ¡rios golpes diferentes (soco, chute, combo, giro, espada...)
+        // vários golpes diferentes (soco, chute, combo, giro, espada...)
         mod.anims.filter(cl => /punch|kick|roundhouse|swordswing|slash|swing|bite|claw|melee|attack|atacar/.test(normalizarNome(cl.name))).forEach((cl, k) => {
             reg("atq" + k, cl, true); sl.atqs.push("atq" + k);
         });
         if (!sl.atqs.length && reg("atq0", clipe("wave"), true, 3.2)) sl.atqs.push("atq0");
         reg("reacao", clipe("hitreact", "receberdano", "hit", "damage", "hurt"), true);
-        reg("morrer", clipe("morrer", "death", "die", "dead"), true);                              // reaÃ§Ã£o ao levar golpe
-        reg("lado", clipe("strafeleft"), false);                             // anda de lado em volta do herÃ³i
-        if (!soWave) reg("provoca", clipe("cheer", "dance", "wave"), true);  // provocaÃ§Ã£o
+        reg("morrer", clipe("morrer", "death", "die", "dead"), true);                              // reação ao levar golpe
+        reg("lado", clipe("strafeleft"), false);                             // anda de lado em volta do herói
+        if (!soWave) reg("provoca", clipe("cheer", "dance", "wave"), true);  // provocação
         sl.alt = t.alt;
         return true;
     }
@@ -2720,7 +2800,7 @@ function iniciarRPG3D(personagem) {
         sl.lean = 0; sl.provAtivo = 0; sl.provT = 3 + Math.random() * 8; sl.tMorte = 0;
     }
 
-    // inimigo derrotado: cai para trÃ¡s, afunda no chÃ£o e sÃ³ entÃ£o libera o slot
+    // inimigo derrotado: cai para trás, afunda no chão e só então libera o slot
     function iniciarMorte(sl, i) {
         H.slot[i] = -1;
         sl.ent = -2;
@@ -2782,7 +2862,7 @@ function iniciarRPG3D(personagem) {
         }
         const livres = slotsH.filter(sl => sl.ent === -1);
         if (!livres.length && !slotsH.length) return;
-        // candidatos: os vivos mais prÃ³ximos (atÃ© 45 m) que ainda nÃ£o tÃªm clone
+        // candidatos: os vivos mais próximos (até 45 m) que ainda não têm clone
         const cand = [];
         for (let i = 0; i < H.n; i++) {
             if (!H.vivo[i] || H.slot[i] >= 0) continue;
@@ -2796,7 +2876,7 @@ function iniciarRPG3D(personagem) {
                 solicitarModeloHorda(visual);
                 continue;
             }
-            // mantÃ©m sÃ³ os melhores (lista pequena ordenada)
+            // mantém só os melhores (lista pequena ordenada)
             let pos = cand.length;
             while (pos > 0 && cand[pos - 1][1] > d2) pos--;
             if (pos < slotsH.length) { cand.splice(pos, 0, [i, d2]); if (cand.length > slotsH.length) cand.pop(); }
@@ -2826,7 +2906,7 @@ function iniciarRPG3D(personagem) {
     const semModelos = () => Object.keys(modelosH).length === 0;
     function escreverFar() {
         if (!hordaFig) return;
-        hordaFig.visible = true;          // bonecos sem forma escondidos: sÃ³ aparecem os modelos 3D
+        hordaFig.visible = true;          // bonecos sem forma escondidos: só aparecem os modelos 3D
 
         const arr = hordaFig.instanceMatrix.array;
         for (let i = 0; i < H.n; i++) {
@@ -3042,7 +3122,7 @@ function iniciarRPG3D(personagem) {
             if (H.atq[i] > 0) H.atq[i] -= delta;
             if (H.stun[i] > 0) H.stun[i] -= delta;
 
-            // ---- longe do herÃ³i: patrulha devagar (anda, para, olha em volta) ----
+            // ---- longe do herói: patrulha devagar (anda, para, olha em volta) ----
             if (d2 > AGGRO * AGGRO) {
                 H.est[i] = 0; H.salto[i] = 0;
                 if (d2 < 3600) {
@@ -3101,13 +3181,13 @@ function iniciarRPG3D(personagem) {
 
             sepX = Math.max(-1, Math.min(1, sepX)) * 1.5 * intensidadeSep;
             sepZ = Math.max(-1, Math.min(1, sepZ)) * 1.5 * intensidadeSep;
-            H.rumo[i] += angNorm(Math.atan2(dx, dz) - H.rumo[i]) * Math.min(1, delta * 10);   // vira suavemente para o herÃ³i
+            H.rumo[i] += angNorm(Math.atan2(dx, dz) - H.rumo[i]) * Math.min(1, delta * 10);   // vira suavemente para o herói
             H.rec[i] -= delta;
 
-            // ---- atordoado (levou golpe): nÃ£o se mexe ----
+            // ---- atordoado (levou golpe): não se mexe ----
             if (H.stun[i] > 0) { H.est[i] = 5; continue; }
 
-            // ---- pulo de ataque (elites e alguns bichos mais Ã¡geis) ----
+            // ---- pulo de ataque (elites e alguns bichos mais ágeis) ----
             if (especie === 7 || especie === 9) {
 
                 const dragao = especie === 7;
@@ -3211,9 +3291,9 @@ function iniciarRPG3D(personagem) {
                 continue;
             }
 
-            const alcance = (ALCANCE_H + (i % 5) * 0.35) * perfil.alcance;         // formam um anel em volta do herÃ³i
+            const alcance = (ALCANCE_H + (i % 5) * 0.35) * perfil.alcance;         // formam um anel em volta do herói
             if (H.atq[i] > 0) {
-                // ---- golpe: avanÃ§a, e o dano sai no meio da animaÃ§Ã£o ----
+                // ---- golpe: avança, e o dano sai no meio da animação ----
                 H.est[i] = 4;
                 if (H.atq[i] > 0.55 && d > 1.1) moverH(i, (ux * 3.2 + sepX * 0.35) * delta, (uz * 3.2 + sepZ * 0.35) * delta);
                 if (H.golpe[i] && H.atq[i] < 0.5) {
@@ -3227,14 +3307,14 @@ function iniciarRPG3D(personagem) {
                 const zig = d > 5 ? Math.sin(tempo * 2.2 + i) * 0.5 : 0;
                 moverH(i, (ux * vel + uz * vel * zig + sepX * 1.4) * delta, (uz * vel - ux * vel * zig + sepZ * 1.4) * delta);
             } else {
-                // ---- no anel: circula em volta do herÃ³i e ataca de vez em quando ----
+                // ---- no anel: circula em volta do herói e ataca de vez em quando ----
                 H.est[i] = 3;
                 const rec = d < alcance - 0.5 ? -1.0 : 0;
                 moverH(i, (uz * H.circ[i] * 1.4 + ux * rec + sepX * 1.8) * delta, (-ux * H.circ[i] * 1.4 + uz * rec + sepZ * 1.8) * delta);
                 if (H.rec[i] <= 0) {
                     H.rec[i] = (1.1 + H.var[i] * 0.8) * perfil.recarga;
                     H.atq[i] = DUR_ATQ; H.golpe[i] = 1;
-                    H.clip[i] = (Math.random() * 6) | 0;          // escolhe um dos golpes disponÃ­veis
+                    H.clip[i] = (Math.random() * 6) | 0;          // escolhe um dos golpes disponíveis
                     if (Math.random() < 0.3) H.circ[i] = -H.circ[i];
                     if (H.fAtq !== hordaFrame) { H.fAtq = hordaFrame; Som.tocar("ataque"); }
                 }
@@ -3257,7 +3337,7 @@ function iniciarRPG3D(personagem) {
             sl.grupo.position.set(px, py, pz);
             sl.grupo.rotation.y = H.rumo[i];
 
-            // pose procedural: balanÃ§o ao andar, inclinaÃ§Ã£o na corrida, recuo antes do golpe, tremida ao apanhar
+            // pose procedural: balanço ao andar, inclinação na corrida, recuo antes do golpe, tremida ao apanhar
             const correndo = est === 6, andando = est === 1 || est === 3 || est === 7 || correndo;
             const bob = andando ? Math.abs(Math.sin(tempo * (correndo ? 13 : est === 7 ? 5 : 8) + i)) * (correndo ? 0.07 : 0.05) : Math.sin(tempo * 1.8 + i) * 0.02;
             let lean = correndo ? 0.2 : est === 1 ? 0.1 : 0;
@@ -3270,7 +3350,7 @@ function iniciarRPG3D(personagem) {
             sl.clone.rotation.z = Math.sin(tempo * 1.4 + i * 2.1) * 0.025 + (est === 3 ? H.circ[i] * 0.07 : 0) + Math.sin(tempo * 45) * 0.1 * stunF;
             sl.clone.position.y = sl.baseY + bob;
 
-            // escolha da animaÃ§Ã£o do esqueleto
+            // escolha da animação do esqueleto
             if (est === 0) {
                 sl.provT -= delta;
                 if (sl.provT <= 0) { sl.provT = 6 + Math.random() * 8; sl.provAtivo = 1.8; }
@@ -3343,13 +3423,13 @@ function iniciarRPG3D(personagem) {
         }
         efeitoAnel(H.x[i], H.z[i], 0xffaa44, 1.8, 0.3);
         if (somMorteFrame !== hordaFrame) { somMorteFrame = hordaFrame; Som.tocar("morte"); }
-        msg((t.elite ? "ðŸ‘‘ " : "ðŸ’€ ") + t.nome + " derrotado! Abates: " + personagem.abates + " (+" + ouro + " ðŸª™)", 2);
+        msg((t.elite ? "👑 " : "💀 ") + t.nome + " derrotado! Abates: " + personagem.abates + " (+" + ouro + " 🪙)", 2);
         verificarNivel();
         atualizarInterface();
     }
 
-    // escolhe os "max" mais prÃ³ximos que passam no teste (lista ordenada pequena) e aplica o dano
-    let ultimosAlvos = [];                       // posiÃ§Ãµes dos inimigos atingidos pela Ãºltima chamada (para os efeitos)
+    // escolhe os "max" mais próximos que passam no teste (lista ordenada pequena) e aplica o dano
+    let ultimosAlvos = [];                       // posições dos inimigos atingidos pela última chamada (para os efeitos)
     function hordaAtingir(dano, alcance, max, filtro, forte) {
         const hx = heroi.position.x, hz = heroi.position.z, r2 = alcance * alcance;
         const alvos = [];
@@ -3401,7 +3481,7 @@ function iniciarRPG3D(personagem) {
     }
 
     // =================================================
-    // MINIMAPA (gira junto com a cÃ¢mera)
+    // MINIMAPA (gira junto com a câmera)
     // =================================================
     const mapaTam = ehToque ? 100 : 130;
     const mapaDiv = document.createElement("div");
@@ -3431,7 +3511,7 @@ function iniciarRPG3D(personagem) {
         };
         c.clearRect(0, 0, mapaTam, mapaTam);
         poligono([[-1000, -1000], [1000, -1000], [1000, 1000], [-1000, 1000]], "#1d2a3a");                    // fora do mapa
-        poligono([[-LIMITE_MAPA, -LIMITE_MAPA], [LIMITE_MAPA, -LIMITE_MAPA], [LIMITE_MAPA, LIMITE_MAPA], [-LIMITE_MAPA, LIMITE_MAPA]], corMapaChao); // chÃ£o
+        poligono([[-LIMITE_MAPA, -LIMITE_MAPA], [LIMITE_MAPA, -LIMITE_MAPA], [LIMITE_MAPA, LIMITE_MAPA], [-LIMITE_MAPA, LIMITE_MAPA]], corMapaChao); // chão
         if (mapaBg) {
             c.save();
             c.imageSmoothingEnabled = false;
@@ -3464,7 +3544,7 @@ function iniciarRPG3D(personagem) {
     }
 
     // =================================================
-    // APLICAR GRÃFICOS
+    // APLICAR GRÁFICOS
     // =================================================
     function aplicarGraficos(nome) {
         const p = PRESETS[nome] || PRESETS.alto;
@@ -3502,7 +3582,7 @@ function iniciarRPG3D(personagem) {
         matGrama.color.set(tema.chao).multiplyScalar(1.3);
         construirCenario();
         atualizarBotoesConfig();
-        msg("ðŸ—ºï¸ CenÃ¡rio " + numCenario + "/" + NUM_CENARIOS + " Â· " + tema.clima, 3);
+        msg("🗺️ Cenário " + numCenario + "/" + NUM_CENARIOS + " · " + tema.clima, 3);
     }
 
     function trocarDificuldade(k) {
@@ -3512,7 +3592,7 @@ function iniciarRPG3D(personagem) {
         for (let j = inimigos.length - 1; j >= 0; j--) removerInimigo(j);
         if (cenarioPronto && HORDA_ATIVA) reiniciarHorda();
         atualizarBotoesConfig();
-        msg("âš”ï¸ Dificuldade: " + DIFICULDADES[k].nome + " (o dano dos inimigos sobe com o seu nÃ­vel)", 4);
+        msg("⚔️ Dificuldade: " + DIFICULDADES[k].nome + " (o dano dos inimigos sobe com o seu nível)", 4);
     }
 
     // =================================================
@@ -3528,7 +3608,8 @@ function iniciarRPG3D(personagem) {
     // =================================================
     function ajustarArea() {
         if (getComputedStyle(area).position === "static") area.style.position = "relative";
-        const h = Math.max(320, window.innerHeight - area.getBoundingClientRect().top);
+        const alturaViewport = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const h = Math.max(ehToque ? 250 : 320, alturaViewport - area.getBoundingClientRect().top);
         area.style.height = h + "px";
         area.style.minHeight = h + "px";
         area.style.overflow = "hidden";
@@ -3544,6 +3625,8 @@ function iniciarRPG3D(personagem) {
     }
     window.addEventListener("resize", redimensionar);
     window.addEventListener("orientationchange", () => setTimeout(redimensionar, 250));
+    if (window.visualViewport) window.visualViewport.addEventListener("resize", redimensionar);
+    if (window.ResizeObserver) new ResizeObserver(redimensionar).observe(area);
     setTimeout(redimensionar, 300);
 
     // =================================================
@@ -3554,6 +3637,7 @@ function iniciarRPG3D(personagem) {
     const seguro = (f, ...a) => { try { f(...a); } catch (erro) { reportarErro(erro); } };
     function quadro() {
         const delta = Math.min(relogio.getDelta(), 0.05);
+        if (jogoPausado) return;
         const tempo = relogio.elapsedTime;
 
         seguro(lerControle, delta);
@@ -3578,7 +3662,7 @@ function iniciarRPG3D(personagem) {
         estado.semDano = (estado.semDano || 0) + delta;
         if (estado.semDano > 5 && personagem.hp < personagem.hpMax) personagem.hp = Math.min(personagem.hpMax, personagem.hp + 2.5 * delta);
 
-        // regeneraÃ§Ã£o leve de mana
+        // regeneração leve de mana
         if (personagem.mp < personagem.mpMax) {
             personagem.mp = Math.min(personagem.mpMax, personagem.mp + 1.5 * delta);
         }
@@ -3599,7 +3683,7 @@ function iniciarRPG3D(personagem) {
             if (avisoSom.style.display !== "none" && (!Som.ativo || Som.ativo() || Som.mudo())) avisoSom.style.display = "none";
         }
 
-        // a luz do sol acompanha o herÃ³i (sombras nÃ­tidas perto dele)
+        // a luz do sol acompanha o herói (sombras nítidas perto dele)
         luzSol.position.set(heroi.position.x + 35, 55, heroi.position.z + 25);
         luzSol.target.position.copy(heroi.position);
 
@@ -3626,13 +3710,13 @@ function iniciarRPG3D(personagem) {
         catch (erro) { reportarErro(erro); try { renderizador.render(cena, camera); } catch (e2) { /* ignora */ } }
     }
 
-    // inÃ­cio
+    // início
     heroi.position.set(0, 0, 60);
     heroi.rotation.y = Math.PI;
     anguloCamera = Math.PI;
     camera.position.set(0, 4, 67);
     aplicarGraficos(nivelGraf);
-    msg("âš”ï¸ J ataca Â· K magia Â· F poÃ§Ã£o Â· â“ ajuda", 8);
+    msg("⚔️ J ataca · K magia · F poção · ❓ ajuda", 8);
     animar();
-    console.log("REINOS EM GUERRA iniciado â€” herÃ³i:", personagem.nome, "| classe:", classeIdentificada);
+    console.log("REINOS EM GUERRA iniciado — herói:", personagem.nome, "| classe:", classeIdentificada);
 }
